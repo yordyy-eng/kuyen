@@ -1,0 +1,134 @@
+[
+  {
+    "name": "citizens",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "full_name",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      },
+      {
+        "name": "patrimonial_category",
+        "type": "select",
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "Militar",
+            "Educación",
+            "Social",
+            "Política",
+            "Religión",
+            "Artes",
+            "Fundación"
+          ]
+        }
+      },
+      {
+        "name": "birth_year",
+        "type": "number",
+        "options": {
+          "min": 1500,
+          "max": 2100
+        }
+      },
+      {
+        "name": "death_year",
+        "type": "number",
+        "options": {
+          "min": 1500,
+          "max": 2100
+        }
+      },
+      {
+        "name": "biography",
+        "type": "editor",
+        "options": {
+          "convertUrls": false
+        }
+      },
+      {
+        "name": "published",
+        "type": "bool"
+      },
+      {
+        "name": "qr_code_image",
+        "type": "file",
+        "options": {
+          "maxSelect": 1,
+          "maxSize": 5242880,
+          "mimeTypes": ["image/png", "image/jpeg", "image/svg+xml"],
+          "thumbs": [],
+          "protected": false
+        }
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_slug` ON `citizens` (`slug`)"
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "name": "qr_codes",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "code",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "redirect_slug",
+        "type": "text",
+        "required": true
+      },
+      {
+        "name": "citizen",
+        "type": "relation",
+        "required": false,
+        "options": {
+          "collectionId": "citizens",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": null
+        }
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_code` ON `qr_codes` (`code`)"
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  }
+]

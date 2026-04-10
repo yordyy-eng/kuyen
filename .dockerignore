@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+build
+.git
+.env*.local
+.npmrc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.dockerignore
+Dockerfile
+docker-compose.yml
+tests
+playwright-report
+test-results
