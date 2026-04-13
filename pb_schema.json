@@ -386,5 +386,75 @@
     "createRule": null,
     "updateRule": null,
     "deleteRule": null
+  },
+  {
+    "id": "id5scanlogs0000",
+    "name": "scan_logs",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "qr_code",
+        "type": "relation",
+        "required": true,
+        "options": {
+          "collectionId": "id2qrcodes00000",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "timestamp",
+        "type": "date",
+        "required": true
+      },
+      {
+        "name": "ip_hash",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "region",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "city",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "device",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "os",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "browser",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "language",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "is_bot",
+        "type": "bool",
+        "required": false
+      }
+    ],
+    "indexes": [],
+    "listRule": null,
+    "viewRule": null,
+    "createRule": "",
+    "updateRule": null,
+    "deleteRule": null
   }
 ]

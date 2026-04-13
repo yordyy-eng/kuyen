@@ -8,6 +8,7 @@ import {
 } from '@/lib/pb-server';
 import MetricCard from '@/components/admin/dashboard/MetricCard';
 import ActivityFeed from '@/components/admin/dashboard/ActivityFeed';
+import ExportIneButton from '@/components/admin/dashboard/ExportIneButton';
 
 /**
  * Admin Dashboard — US-510 Centro de Comando
@@ -60,6 +61,7 @@ export default async function AdminDashboardPage() {
           >
             Revisar Propuestas
           </Link>
+          <ExportIneButton />
         </div>
       </header>
 

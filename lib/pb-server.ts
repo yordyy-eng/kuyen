@@ -85,10 +85,8 @@ export async function listCitizens(): Promise<CitizenRecord[]> {
   try {
     const pb = createPocketBaseClient();
     const result = await pb.collection('citizens').getList<CitizenRecord>(1, 50, {
-      filter: 'published = true',
-      sort: '-created',
-      next: { revalidate: 3600 },
-    } as any);
+      filter: 'published=true',
+    });
     return result.items;
   } catch (error) {
     console.error("PocketBase listCitizens error:", error);
@@ -312,8 +310,6 @@ export async function getRecentActivity(limit: number = 5): Promise<ProposalReco
   try {
     const pb = await createAuthenticatedPB();
     const result = await pb.collection('proposals').getList<ProposalRecord>(1, limit, {
-      filter: 'status != "pending"',
-      sort: '-reviewed_at',
       expand: 'citizen,reviewer',
     });
     return result.items;

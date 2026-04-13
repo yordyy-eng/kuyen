@@ -11,6 +11,18 @@ All notable changes to the KUYEN project will be documented in this file.
 - **Auditoría**: Marcado automático de `plate_printed` en PocketBase tras la generación exitosa.
 - **Acceso Admin**: Botón de descarga directa en la vista de edición de ciudadano.
 
+### Métricas y Estadísticas (US-511 — Motor de Métricas Pasivas)
+- **Captura Silenciosa**: Implementado Route Handler en `/q/[code]` que registra métricas de dispositivo, OS y navegador antes de redirigir al memorial.
+- **Trazabilidad**: Nueva colección `scan_logs` en PocketBase para almacenamiento de analíticas anonimizadas.
+- **Exportación INE**: Capacidad de generar reportes en formato CSV compatibles con estándares estadísticos desde el Dashboard administrativo.
+- **Optimización**: Registro de métricas mediante promesas "fire-and-forget" para latencia cero en la experiencia del usuario.
+
+### QA & Validación (Épica Final — Certificación de Estabilidad)
+- **Suite E2E**: Implementación de pruebas automatizadas con Playwright para flujos críticos.
+- **Validación Auth**: Verificación exitosa de redirecciones y acceso al Dashboard administrativo.
+- **Validación Contribución**: Pruebas de ingesta de datos y resistencia del Rate Limiting (US-509) certificadas.
+- **Certificación OCI**: Infraestructura validada mediante pruebas de carga local en entorno de pre-producción.
+
 ### Añadido (Épica 6 — Despliegue en Producción OCI)
 - **Infraestructura**: Creado `docker-compose.prod.yml` con hardening de puertos (127.0.0.1) y persistencia mediante volúmenes absolutos.
 - **Automatización**: Nuevo script `scripts/deploy.sh` para despliegues CI/CD manuales con reconstrucción atómica.
