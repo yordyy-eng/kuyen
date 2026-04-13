@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { getCitizenBySlug } from '@/lib/pb-server';
+import FamilyTree from '@/components/memorial/FamilyTree';
 
 /**
  * Vista de Detalle: Memorial del Ciudadano
@@ -59,6 +60,9 @@ export default async function MemorialPage({ params }: { params: { slug: string 
             </p>
           </div>
         </div>
+
+        {/* US-401 & US-402: Árbol Genealógico Interactivo */}
+        <FamilyTree citizen={citizen} />
 
         {/* Cita de cierre o metadato cultural */}
         <div className="mt-16 text-center border-t border-border pt-12">

@@ -7,9 +7,9 @@ services:
     container_name: kuyen-backend
     restart: unless-stopped
     ports:
-      - "8090:8090"
+      - "8091:8090" # Changed to 8091 to avoid conflict with WsToastNotification.exe on host
     volumes:
-      - ./pb_data:/pb_data
+      - pocketbase_data:/pb/pb_data
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8090/api/health"]
       interval: 10s
@@ -33,3 +33,6 @@ services:
       resources:
         limits:
           memory: 1G
+
+volumes:
+  pocketbase_data:

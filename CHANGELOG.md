@@ -1,6 +1,22 @@
 # Changelog
 
 All notable changes to the KUYEN project will be documented in this file.
+  
+### [0.2.1] - 2026-04-12
+
+### Added
+- **Premium Nodes (US-403)**: Implemented `CitizenTreeNode` with custom avatars, Serif typography, and dynamic states for the current heritage record.
+- **Node Detail Panel (US-406)**: Created a mobile-first Bottom Sheet component for extended family data with swipe-to-close gestures.
+- **Improved Interaction**: Added automatic panel closing on map pan/click and enriched node data injection.
+- **PB Helper**: Integrated `getPBImageUrl` utility for standardized multi-media retrieval.
+
+### [0.2.0] - 2026-04-11
+
+### Added
+- **Family Genealogy (Epic 4)**: Integrated React Flow (@xyflow/react) for interactive family tree visualization.
+- **Dynamic Layout**: Implementation of Dagre-based hierarchical layout for automated tree generation (US-402).
+- **Relationships Schema**: Added `relationships` collection to PocketBase with support for multi-directional ties.
+- **Interactive UX**: Click-to-navigate functionality on family nodes with mobile-first zoom/pan protections (US-403).
 
 ### [0.1.3] - 2026-04-11
 

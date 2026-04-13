@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KUYEN - Plataforma de Registro Patrimonial
 
-## Getting Started
+KUYEN es una plataforma diseñada para digitalizar la memoria y el patrimonio, creando un puente entre monumentos físicos y registros digitales dinámicos.
 
-First, run the development server:
+## Visión General
+El proyecto permite la gestión de ciudadanos destacados, memoriales individuales y la visualización de vínculos genealógicos e institucionales complejos mediante una interfaz moderna, solemne y de alto rendimiento.
+
+## Arquitectura Tecnológica
+- **Frontend**: Next.js 16.2.3 (App Router) con Turbopack.
+- **Estilos**: Tailwind CSS v4 (Light Mode First).
+- **Backend**: PocketBase (BaaS) operando bajo Docker.
+- **Gráficos**: React Flow (@xyflow/react) + Dagre para el layout de árboles genealógicos.
+- **Infraestructura**: Docker Compose para orquestación de servicios locales y producción (ARM64).
+
+## Configuración del Entorno (Local)
+
+### 1. Infraestructura Docker
+El backend de PocketBase está configurado para evitar conflictos comunes en plataformas Windows.
+- **Puerto Host**: `8091` (Mapeado internamente al 8090 del contenedor).
+- **Dashboard**: `http://localhost:8091/_/`
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+docker compose up -d pocketbase
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Variables de Entorno
+Crea un archivo `.env.local` con:
+```env
+NEXT_PUBLIC_POCKETBASE_URL=http://127.0.0.1:8091
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Desarrollo Frontend
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Características Clave
+- **US-202 QR Redirection**: Middleware de redirección inteligente con caché en el Edge para códigos `/q/:code`.
+- **Épica 4 Genealogía**: Visualización interactiva de vínculos familiares e institucionales usando layout jerárquico.
+- **SEO & Performance**: Optimización agresiva para lectura en exteriores con alto contraste y tiempos de carga mínimos.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+© 2026 KUYEN Heritage Project
