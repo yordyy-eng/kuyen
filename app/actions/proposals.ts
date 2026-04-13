@@ -1,9 +1,11 @@
 'use server';
 
 import { z } from 'zod';
-import { POCKETBASE_API_URL } from '@/lib/pb-server';
+import { revalidatePath } from 'next/cache';
+import { createAuthenticatedPB, PB_URL } from '@/lib/pb-server';
+import { redirect } from 'next/navigation';
 
-// Zod schema for proposal validation
+// Zod schemas
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
@@ -14,9 +16,14 @@ const proposalSchema = z.object({
   biography: z.string().min(10, 'La biografía debe ser más extensa.').max(5000, 'El texto excede el límite permitido.'),
 });
 
+const rejectionSchema = z.object({
+  reviewer_note: z.string().min(10, 'El motivo del rechazo debe tener al menos 10 caracteres.'),
+});
+
+// ── US-501: Público — Enviar Propuesta ──────────────────────────────────────
+
 export async function submitProposal(prevState: any, formData: FormData) {
   try {
-    // Basic structural validation
     const rawData = {
       citizen: formData.get('citizen') as string,
       contributor_name: formData.get('contributor_name') as string,
@@ -24,51 +31,112 @@ export async function submitProposal(prevState: any, formData: FormData) {
       biography: formData.get('biography') as string,
     };
 
-    // 1. Zod Validation for text fields
     const validatedFields = proposalSchema.safeParse(rawData);
     if (!validatedFields.success) {
-      return { 
-        success: false, 
-        error: validatedFields.error.issues[0]?.message || 'Información inválida.' 
-      };
+      return { success: false, error: validatedFields.error.issues[0]?.message };
     }
 
-    // 2. Extra Security: File Validation
+    // Validación de archivos en el lado servidor
     const photos = formData.getAll('photos');
     for (const file of photos) {
       if (file instanceof File && file.size > 0) {
-        if (file.size > MAX_FILE_SIZE) {
-          return { success: false, error: 'Cada foto no debe superar los 5MB.' };
-        }
-        if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-          return { success: false, error: 'Formato de imagen no permitido. Usa JPG, PNG o WEBP.' };
-        }
+        if (file.size > MAX_FILE_SIZE) return { success: false, error: 'Fotos máx 5MB.' };
+        if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return { success: false, error: 'Formato inválido.' };
       }
     }
 
-    // Add status
     formData.set('status', 'pending');
 
-    // TEST BYPASS: Since e2e tests run against an unseeded database with createRule: null, 
-    // the Node.js server action fetch will always fail 404/403. We mock the Happy Path response:
-    if (process.env.NODE_ENV !== 'production' && rawData.contributor_name === 'Ciudadano Responsable') {
-      return { success: true };
-    }
-
-    const res = await fetch(`${POCKETBASE_API_URL}/api/collections/proposals/records`, {
+    const res = await fetch(`${PB_URL}/api/collections/proposals/records`, {
       method: 'POST',
       body: formData,
       cache: 'no-store',
     });
 
-    if (!res.ok) {
-      const errorData = await res.json();
-      console.error('PocketBase proposal error:', errorData);
-      return { success: false, error: 'Hubo un error al guardar la información en nuestro registro.' };
-    }
-
+    if (!res.ok) throw new Error('PB Post Failed');
     return { success: true };
   } catch (error) {
-    return { success: false, error: 'Fallo al procesar la solicitud. Contacta soporte.' };
+    return { success: false, error: 'Error de servidor.' };
   }
+}
+
+// ── US-505: Admin — Aprobar Propuesta ───────────────────────────────────────
+
+export async function approveProposal(formData: FormData) {
+  const pb = await createAuthenticatedPB();
+  const proposalId = formData.get('proposalId') as string;
+  const citizenId = formData.get('citizenId') as string;
+  const finalBio = formData.get('final_biography') as string;
+  const approvedPhotos = formData.getAll('approved_photos') as string[];
+
+  if (!proposalId || !citizenId) throw new Error('IDs faltantes');
+
+  try {
+    // 1. Obtener la propuesta para acceder a los archivos originales
+    const proposal = await pb.collection('proposals').getOne(proposalId);
+    
+    // 2. Preparar el Ciudadano para el update
+    const citizenUpdate = new FormData();
+    // Sanitización básica (Next.js 16/React ya escapa en render, pero limpiamos tags peligrosos)
+    citizenUpdate.set('biography', finalBio.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gim, ""));
+
+    // 3. Transferencia de Fotos: Proposals -> Citizens
+    // PocketBase requiere los archivos reales para moverlos entre colecciones.
+    for (const filename of approvedPhotos) {
+      const fileUrl = `${PB_URL}/api/files/proposals/${proposalId}/${filename}`;
+      const response = await fetch(fileUrl);
+      if (response.ok) {
+        const blob = await response.blob();
+        citizenUpdate.append('gallery', blob, filename);
+      }
+    }
+
+    // 4. Ejecutar cambios en el Ciudadano
+    await pb.collection('citizens').update(citizenId, citizenUpdate);
+
+    // 5. Marcar Propuesta como Aprobada
+    await pb.collection('proposals').update(proposalId, {
+      status: 'approved',
+      reviewed_at: new Date().toISOString(),
+      reviewer: pb.authStore.model?.id,
+      reviewer_note: 'Aprobada por el administrador.',
+    });
+
+    // 6. Invalidación de Caché Purga Quirúrgica
+    const citizen = await pb.collection('citizens').getOne(citizenId);
+    revalidatePath(`/memorial/${citizen.slug}`);
+    revalidatePath('/');
+    
+  } catch (error) {
+    console.error('Approve Proposal Error:', error);
+    throw new Error('No se pudo procesar la aprobación.');
+  }
+
+  redirect('/admin/propuestas?estado=approved');
+}
+
+// ── US-505: Admin — Rechazar Propuesta ──────────────────────────────────────
+
+export async function rejectProposal(formData: FormData) {
+  const pb = await createAuthenticatedPB();
+  const proposalId = formData.get('proposalId') as string;
+  const reviewerNote = formData.get('reviewer_note') as string;
+
+  const valid = rejectionSchema.safeParse({ reviewer_note: reviewerNote });
+  if (!valid.success) {
+    throw new Error(valid.error.issues[0]?.message);
+  }
+
+  try {
+    await pb.collection('proposals').update(proposalId, {
+      status: 'rejected',
+      reviewer_note: reviewerNote,
+      reviewed_at: new Date().toISOString(),
+      reviewer: pb.authStore.model?.id,
+    });
+  } catch (error) {
+    throw new Error('Error al rechazar propuesta.');
+  }
+
+  redirect('/admin/propuestas?estado=rejected');
 }

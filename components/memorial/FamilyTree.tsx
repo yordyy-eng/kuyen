@@ -3,12 +3,7 @@ import dynamic from 'next/dynamic';
 import { CitizenRecord, RelationshipRecord } from '@/lib/pb-server';
 import { computeTreeLayout } from '@/lib/tree-utils';
 import { Node, Edge } from '@xyflow/react';
-
-// US-402: Carga diferida del Canvas para evitar problemas con SSR en React Flow
-const FamilyTreeCanvas = dynamic(
-  () => import('./FamilyTreeCanvas'),
-  { ssr: false, loading: () => <div className="w-full h-[500px] flex items-center justify-center bg-stone-50 rounded-2xl animate-pulse">Cargando árbol genealógico...</div> }
-);
+import FamilyTreeClientWrapper from './FamilyTreeClientWrapper';
 
 interface FamilyTreeProps {
   citizen: CitizenRecord;
@@ -90,7 +85,7 @@ export default function FamilyTree({ citizen, relationships }: FamilyTreeProps) 
       </div>
       
       <div className="relative">
-        <FamilyTreeCanvas 
+        <FamilyTreeClientWrapper 
           initialNodes={positionedNodes} 
           initialEdges={positionedEdges} 
           currentCitizenId={citizen.id} 

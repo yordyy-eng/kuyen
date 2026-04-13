@@ -2,6 +2,17 @@
 
 All notable changes to the KUYEN project will be documented in this file.
 
+### [0.5.0] - 2026-04-13
+
+### Añadido (US-505 — Aprobación Granular)
+- **Vista de Detalle**: Nueva pantalla de revisión quirúrgica en `app/admin/propuestas/[id]`.
+- **Comparativa de Bio**: Componente `BiographyDiff` que permite editar el texto propuesto antes de la publicación definitiva.
+- **Gestión de Medios**: `PhotoReviewGrid` con sistema de selección individual para decidir qué fotos se integran a la galería pública.
+- **Acciones Administrativas**: 
+  - `approveProposal`: Proceso de aprobación con transferencia de archivos, sanitización de bio e invalidación de caché quirúrgica.
+  - `rejectProposal`: Rechazo con auditoría obligatoria (`reviewer_note`).
+- **Esquema**: Actualización de la base de datos para soportar galerías de imágenes en ciudadanos y campos de auditoría en propuestas.
+
 ### [0.4.0] - 2026-04-13
 
 ### Added

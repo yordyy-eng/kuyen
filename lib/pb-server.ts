@@ -1,19 +1,20 @@
 // lib/pb-server.ts
-// Capa de acceso a PocketBase para Server Components y Server Actions.
+// Capa de acceso a PocketBase exclusiva para Server Components y Server Actions.
+// Utiliza APIs de servidor como 'next/headers'.
 
 import PocketBase from 'pocketbase';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { ADMIN_COOKIE_NAME } from './auth-constants';
+import { PB_URL } from './pb-client-utils';
 import type {
   ListProposalsParams,
   ListProposalsResult,
   ProposalRecord,
 } from '@/lib/types/proposals';
 
-// ── Singleton de cliente PocketBase (sin auth) ──────────────────────────────
-export const PB_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8091';
-export const POCKETBASE_API_URL = PB_URL; // Alias para compatibilidad con código existente
+// Re-exportamos constantes de cliente para conveniencia en server components
+export { PB_URL, POCKETBASE_API_URL, getPocketBaseFileUrl, getPBImageUrl } from './pb-client-utils';
 
 /**
  * Interfaz que representa el esquema de un ciudadano en PocketBase.
@@ -32,6 +33,7 @@ export interface CitizenRecord {
   birth_year?: number;
   death_year?: number;
   portrait?: string;
+  gallery?: string[];
   sector?: string;
   plot_number?: string;
   visit_count?: number;
@@ -74,33 +76,10 @@ export async function createAuthenticatedPB(): Promise<PocketBase> {
   return pb;
 }
 
-// ── Helpers de archivos ─────────────────────────────────────────────────────
-export function getPocketBaseFileUrl(
-  collectionIdOrName: string,
-  recordId:   string,
-  filename:   string,
-  thumb?:     string
-): string {
-  const base = `${PB_URL}/api/files/${collectionIdOrName}/${recordId}/${filename}`;
-  return thumb ? `${base}?thumb=${thumb}` : base;
-}
-
-/**
- * Helper específico para avatares de ciudadanos (usa 'citizens' collection por defecto)
- */
-export function getPBImageUrl(record: { id: string; collectionId?: string; portrait?: string }, filename?: string): string | null {
-  if (!record || (!filename && !record.portrait)) return null;
-  const file = filename || record.portrait;
-  if (!file) return null;
-  // Si no viene collectionId (común en expands), usamos el ID de la tabla 'citizens'
-  const collection = record.collectionId || 'id1citizens0000'; 
-  return getPocketBaseFileUrl(collection, record.id, file);
-}
-
 // ── Citizens (públicos) ──────────────────────────────────────────────────────
 
 /**
- * Obtiene la lista de ciudadanos publicados directamente mediante la API REST.
+ * Obtiene la lista de ciudadanos publicados.
  */
 export async function listCitizens(): Promise<CitizenRecord[]> {
   try {
@@ -121,11 +100,9 @@ export async function listCitizens(): Promise<CitizenRecord[]> {
  * Obtiene un ciudadano específico por su slug.
  */
 export async function getCitizenBySlug(slug: string): Promise<CitizenRecord> {
-  // Bypass temporal para tests de seguridad en entornos locales si la DB no tiene seeds
   if (slug === 'seguridad-test' && process.env.NODE_ENV !== 'production') {
     return {
       id: 'cit_sec_12345',
-      collectionId: 'id1citizens0000',
       slug: 'seguridad-test',
       full_name: 'Test de Seguridad',
       biography: 'Mocked for testing',
@@ -172,7 +149,6 @@ export async function listProposals(
   const { status = 'all', page = 1, perPage = 25 } = params;
   const pb = await createAuthenticatedPB();
 
-  // Construir el filtro dinámico
   const filterParts: string[] = [];
   if (status && status !== 'all') {
     filterParts.push(`status = "${status}"`);
@@ -184,7 +160,7 @@ export async function listProposals(
     perPage,
     {
       filter,
-      sort:   '-created', // más recientes primero
+      sort:   '-created',
       expand: 'citizen,reviewer',
     }
   );

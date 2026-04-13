@@ -17,6 +17,21 @@ export default function PhotoUploadInput() {
     if (!e.target.files) return;
     const newFiles = Array.from(e.target.files);
     
+    // Client-side UX Validation
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
+    for (const file of newFiles) {
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        alert('Formato no permitido. Sube solo imágenes JPG, PNG o WEBP.');
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        alert('Una imagen excede los 5MB de tamaño máximo.');
+        return;
+      }
+    }
+
     // Limitar a máximo 3 fotos
     if (previews.length + newFiles.length > 3) {
       alert('Puedes adjuntar un máximo de 3 fotografías.');

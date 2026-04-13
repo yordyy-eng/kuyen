@@ -1,42 +1,43 @@
 // lib/types/proposals.ts
 // Tipos compartidos para el módulo de propuestas ciudadanas.
-// Ajustado para coincidir con el esquema real de PocketBase (citizen vs target_citizen).
+// Actualizado para US-505 con campos de auditoría y galería.
 
 export type ProposalStatus =
   | 'pending'
   | 'approved'
   | 'rejected';
-  // Nota: 'needs_review' no está en el esquema actual de PB, se omite por ahora para evitar errores de API.
 
 export interface CitizenExpand {
   id:         string;
   full_name:  string;
   slug:       string;
   portrait:   string;
+  gallery:    string[];
   sector:     string;
   plot_number:string;
+  biography:  string;
 }
 
 export interface ReviewerExpand {
-  id:   string;
-  name: string;
+  id:    string;
+  email: string;
 }
 
 export interface ProposalRecord {
   id:                   string;
   contributor_name:     string;
   contributor_email:    string;
-  contributor_relation?: string; // Opcional si no está en el esquema
+  contributor_relation: string;
   biography:            string;
   photos:               string[];
   status:               ProposalStatus;
-  reviewer_note?:       string;
-  reviewed_at?:         string;
+  reviewer_note:        string;
+  reviewed_at:          string;
   created:              string;
   updated:              string;
   // Relaciones sin expand
   citizen:              string;
-  reviewer?:            string;
+  reviewer:             string;
   // Relaciones expandidas
   expand?: {
     citizen?: CitizenExpand;

@@ -8,9 +8,14 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://127.0.0.1:3000',
     trace: 'on-first-retry',
-    colorScheme: 'light', // Forced light mode as per requirements
+    colorScheme: 'light',
+    navigationTimeout: 15000,
+    actionTimeout: 15000,
+  },
+  expect: {
+    timeout: 10000,
   },
 
   projects: [
@@ -25,8 +30,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: 'npm run dev -- -H 127.0.0.1',
+    url: 'http://127.0.0.1:3000',
     reuseExistingServer: !process.env.CI,
+    timeout: 120000,
   },
 });

@@ -4,8 +4,8 @@ import { redirect } from 'next/navigation';
 import { getCitizenBySlug } from '@/lib/pb-server';
 import ContributionForm from '@/components/contribuir/ContributionForm';
 
-export default async function ContribuirPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default async function ContribuirPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   
   let citizen;
   try {

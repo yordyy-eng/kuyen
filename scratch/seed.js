@@ -12,7 +12,7 @@ async function seed() {
     return new Promise((resolve, reject) => {
       const req = http.request({
         hostname: '127.0.0.1',
-        port: 8090,
+        port: 8091,
         path: path,
         method: 'POST',
         headers: {
