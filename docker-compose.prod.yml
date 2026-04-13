@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     command: serve --http="0.0.0.0:8090" --dir="/usr/local/bin/pb_data"
     ports:
-      - "127.0.0.1:8091:8090" # Solo local, Nginx Proxy Manager hace el resto
+      - "127.0.0.1:8095:8090" # Solo local (Puerto 8095 de host)
     volumes:
       # OCI: Block Storage mapeado a ruta absoluta para persistencia resiliente
       - /var/lib/docker/volumes/kuyen_pb_data/_data:/usr/local/bin/pb_data
@@ -28,7 +28,7 @@ services:
     environment:
       - NODE_ENV=production
       - POCKETBASE_URL=http://pocketbase:8090
-      - NEXT_PUBLIC_POCKETBASE_URL=https://admin.kuyen.cl # URL pública final
+      - NEXT_PUBLIC_POCKETBASE_URL=https://kuyen.adelchen.cl # Dominio final aprobado
     depends_on:
       - pocketbase
     deploy:
