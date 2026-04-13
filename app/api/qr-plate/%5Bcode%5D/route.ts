@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import QRCode from 'qrcode';
 import { getQrByCode, markPlateAsPrinted } from '@/lib/pb-server';
+import { ADMIN_COOKIE_NAME } from '@/lib/auth-constants';
 
 /**
  * US-205 / T-506.7: Generador de Placas QR Nativo (SSR)
- * Genera un SVG compuesto con diseño Heritage para impresión física.
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
+  // US-511: Protección de Endpoint (Fix Zero-Day)
+  // Solo administradores autenticados pueden generar placas.
+  const cookieStore = await cookies();
+  const session = cookieStore.get(ADMIN_COOKIE_NAME);
+
+  if (!session?.value) {
+    return new NextResponse('Acceso no autorizado.', { status: 401 });
+  }
+
   const { code } = await params;
 
   // 1. Validar registro en PocketBase
