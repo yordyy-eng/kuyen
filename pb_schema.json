@@ -245,5 +245,88 @@
     "createRule": null,
     "updateRule": null,
     "deleteRule": null
+  },
+  {
+    "id": "id4proposals000",
+    "name": "proposals",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "citizen",
+        "type": "relation",
+        "required": true,
+        "options": {
+          "collectionId": "id1citizens0000",
+          "cascadeDelete": true,
+          "minSelect": null,
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "contributor_name",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "contributor_email",
+        "type": "email",
+        "required": true,
+        "options": {
+          "exceptDomains": [],
+          "onlyDomains": []
+        }
+      },
+      {
+        "name": "biography",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "photos",
+        "type": "file",
+        "required": false,
+        "options": {
+          "maxSelect": 3,
+          "maxSize": 5242880,
+          "mimeTypes": [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+          ],
+          "thumbs": [],
+          "protected": false
+        }
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        }
+      }
+    ],
+    "indexes": [],
+    "listRule": null,
+    "viewRule": null,
+    "createRule": "",
+    "updateRule": null,
+    "deleteRule": null
   }
 ]

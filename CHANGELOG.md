@@ -1,6 +1,14 @@
 # Changelog
 
 All notable changes to the KUYEN project will be documented in this file.
+
+### [0.3.0] - 2026-04-12
+
+### Added
+- **Crowdsourcing (Epic 5)**: Iniciada la Épica 5 con la página de contribución ciudadana (US-501).
+- **Client Forms**: Creado `ContributionForm` y `PhotoUploadInput` para ingesta de datos con manejo de imágenes local y `useActionState`.
+- **Server Actions**: Implementado `submitProposal` para enviar y registrar propuestas en texto e imagen directos hacia PocketBase.
+- **Schema Updates**: Añadida la colección `proposals` al esquema base con permisos públicos controlados.
   
 ### [0.2.1] - 2026-04-12
 
