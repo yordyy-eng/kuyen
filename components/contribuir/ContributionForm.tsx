@@ -41,8 +41,11 @@ export default function ContributionForm({ citizenId, slug }: ContributionFormPr
       <input type="hidden" name="citizen" value={citizenId} />
 
       {state.error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-sans">
-          {state.error}
+        <div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-sm font-sans flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <span className="text-xl mt-0.5">⚠️</span>
+          <p className="flex-1 leading-relaxed">
+            {state.error}
+          </p>
         </div>
       )}
 

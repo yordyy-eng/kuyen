@@ -2,6 +2,36 @@
 
 All notable changes to the KUYEN project will be documented in this file.
 
+### [0.7.0] - 2026-04-13
+
+### Añadido (US-205 — Generación Nativa de Placas)
+- **SSR QR Plate**: Generación nativa de placas QR en formato SVG desde `/api/qr-plate/[code]`.
+- **Identidad Oficial**: Integración del Escudo de Angol oficial inyectado directamente en la plantilla SVG.
+- **Independencia de APIs**: Eliminación de dependencias externas para QR (ahora usa la librería `qrcode` local).
+- **Auditoría**: Marcado automático de `plate_printed` en PocketBase tras la generación exitosa.
+- **Acceso Admin**: Botón de descarga directa en la vista de edición de ciudadano.
+
+### Seguridad (US-509 — Protección Anti-Spam)
+- **Rate Limiting**: Implementación de limitador de tasa en memoria (`lib/rate-limit.ts`) con una ventana de 10 minutos.
+- **Detección de IP Blindada**: Extracción de IP real compatible con proxies (X-Forwarded-For) para evitar suplantaciones de origen.
+- **Feedback Elegante**: Integración de mensajes de reintento en el formulario de contribución, bloqueando el procesamiento de archivos si se excede el límite.
+
+### Infraestructura (US-104)
+- **Backups**: Script `scripts/backup.sh` para respaldos automatizados de `pb_data` con rotación de 7 días.
+
+### [0.6.0] - 2026-04-13
+
+### Añadido (US-506 — Gestión de Directorio)
+- **Panel Administrativo**: Nueva tabla de gestión de ciudadanos en `/admin/ciudadanos`.
+- **Edición de Perfiles**: Formulario de edición avanzado en `/admin/ciudadanos/[id]/editar` con:
+  - Toggles para `published`, `is_patrimonial` y `exemption_active`.
+  - Subida y reemplazo de retrato (portrait) con previsualización en tiempo real.
+- **Acciones**: Server Action `updateCitizen` con validación Zod y revalidación de caché quirúrgica.
+
+### Seguridad e Infraestructura
+- **Persistencia Docker**: Corrección crítica en `docker-compose.yml` usando bind mounts (`./pb_data`) para asegurar la supervivencia de datos SQLite.
+- **Automatización**: Nuevos scripts `scratch/sync-schema.js` y `scratch/seed-test-data.js` con soporte para secretos desde `.env.local`.
+
 ### [0.5.0] - 2026-04-13
 
 ### Añadido (US-505 — Aprobación Granular)

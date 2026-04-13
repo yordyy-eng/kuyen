@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { createAuthenticatedPB, PB_URL } from '@/lib/pb-server';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // Zod schemas
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -23,6 +25,24 @@ const rejectionSchema = z.object({
 // ── US-501: Público — Enviar Propuesta ──────────────────────────────────────
 
 export async function submitProposal(prevState: any, formData: FormData) {
+  // ── US-509: Protección Anti-Spam (Rate Limiting) ──
+  const headerList = await headers();
+  const forwardedFor = headerList.get('x-forwarded-for');
+  
+  // Extraemos la IP real (la primera en la lista si hay proxies)
+  const clientIp = forwardedFor 
+    ? forwardedFor.split(',')[0].trim() 
+    : '127.0.0.1';
+
+  const limitCheck = checkRateLimit(clientIp);
+
+  if (!limitCheck.success) {
+    return { 
+      success: false, 
+      error: `Límite de envíos excedido. Por seguridad, intenta de nuevo en ${limitCheck.retryAfterMinutes} minutos.` 
+    };
+  }
+
   try {
     const rawData = {
       citizen: formData.get('citizen') as string,
