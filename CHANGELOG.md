@@ -11,6 +11,11 @@ All notable changes to the KUYEN project will be documented in this file.
 - **Auditoría**: Marcado automático de `plate_printed` en PocketBase tras la generación exitosa.
 - **Acceso Admin**: Botón de descarga directa en la vista de edición de ciudadano.
 
+### Añadido (Épica 6 — Despliegue en Producción OCI)
+- **Infraestructura**: Creado `docker-compose.prod.yml` con hardening de puertos (127.0.0.1) y persistencia mediante volúmenes absolutos.
+- **Automatización**: Nuevo script `scripts/deploy.sh` para despliegues CI/CD manuales con reconstrucción atómica.
+- **Optimización**: Dockerfile multi-stage validado para despliegue en instancias ARM de bajos recursos.
+
 ### Añadido (US-510 — Dashboard de Auditoría y Métricas)
 - **Centro de Comando**: Transformación de la landing administrativa en un panel de control vivo con métricas agregadas.
 - **Métricas SSR**: Implementación de conteos paralelos con `Promise.all` para ciudadanos, hitos patrimoniales y placas QR impresas.
@@ -18,8 +23,6 @@ All notable changes to the KUYEN project will be documented in this file.
 - **Diseño Heritage**: Componentes `MetricCard` y `ActivityFeed` integrados con la estética solemne del proyecto.
 - **Cierre de Desarrollo**: Finalización de todas las épicas administrativas planeadas para la fase de lanzamiento.
 
-### Seguridad (US-511 — Auditoría y Hardening Final)
-- **Capa de Mutación**: Implementada verificación de sesión redundante en todos los Server Actions administrativos (`updateCitizen`, `approveProposal`, `rejectProposal`).
 - **Blindaje QR**: Reforzada la validación de acceso en `/api/qr-plate/[code]` mediante middleware de función interno.
 - **Sanitización de Logs**: Eliminación de logs que exponían trazas internas o datos de registros durante fallos de servidor.
 

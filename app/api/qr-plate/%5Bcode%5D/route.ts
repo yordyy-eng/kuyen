@@ -17,7 +17,7 @@ export async function GET(
   const session = cookieStore.get(ADMIN_COOKIE_NAME);
 
   if (!session?.value) {
-    return new NextResponse('Acceso no autorizado.', { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { code } = await params;

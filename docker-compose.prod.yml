@@ -1,0 +1,39 @@
+# docker-compose.prod.yml
+# US-601: Configuración de Producción para OCI (Oracle Cloud Infrastructure)
+services:
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    container_name: kuyen-backend-prod
+    restart: unless-stopped
+    command: serve --http="0.0.0.0:8090" --dir="/usr/local/bin/pb_data"
+    ports:
+      - "127.0.0.1:8091:8090" # Solo local, Nginx Proxy Manager hace el resto
+    volumes:
+      # OCI: Block Storage mapeado a ruta absoluta para persistencia resiliente
+      - /var/lib/docker/volumes/kuyen_pb_data/_data:/usr/local/bin/pb_data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8090/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kuyen-frontend-prod
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000" # Exposición interna protegida
+    environment:
+      - NODE_ENV=production
+      - POCKETBASE_URL=http://pocketbase:8090
+      - NEXT_PUBLIC_POCKETBASE_URL=https://admin.kuyen.cl # URL pública final
+    depends_on:
+      - pocketbase
+    deploy:
+      resources:
+        limits:
+          memory: 512M # Optimizado para OCI Free Tier ARM
+        reservations:
+          memory: 256M
