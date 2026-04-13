@@ -24,7 +24,7 @@ services:
     container_name: kuyen-frontend-prod
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3000:3000" # Exposición interna protegida
+      - "127.0.0.1:3005:3000" # Exposición interna protegida
     environment:
       - NODE_ENV=production
       - POCKETBASE_URL=http://pocketbase:8090
