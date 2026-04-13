@@ -1,7 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
-import { getCitizenBySlug } from '@/lib/pb-server';
+import { getCitizenBySlug, getRelationshipsByCitizenId } from '@/lib/pb-server';
 import FamilyTree from '@/components/memorial/FamilyTree';
+import TreeContributePrompt from '@/components/tree/TreeContributePrompt';
 
 /**
  * Vista de Detalle: Memorial del Ciudadano
@@ -10,6 +11,10 @@ import FamilyTree from '@/components/memorial/FamilyTree';
 export default async function MemorialPage({ params }: { params: { slug: string } }) {
   const { slug } = params;
   const citizen = await getCitizenBySlug(slug);
+  
+  // US-409: Lógica centralizada de relaciones para renderizado condicional
+  const relationships = await getRelationshipsByCitizenId(citizen.id);
+  const hasRelationships = relationships.length > 0;
 
   return (
     <article className="min-h-screen bg-background pb-20">
@@ -61,8 +66,12 @@ export default async function MemorialPage({ params }: { params: { slug: string 
           </div>
         </div>
 
-        {/* US-401 & US-402: Árbol Genealógico Interactivo */}
-        <FamilyTree citizen={citizen} />
+        {/* US-401 & US-402: Árbol Genealógico u Hoja de Contribución (US-409) */}
+        {hasRelationships ? (
+          <FamilyTree citizen={citizen} relationships={relationships} />
+        ) : (
+          <TreeContributePrompt slug={citizen.slug} />
+        )}
 
         {/* Cita de cierre o metadato cultural */}
         <div className="mt-16 text-center border-t border-border pt-12">

@@ -1,6 +1,6 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
-import { getRelationshipsByCitizenId, CitizenRecord } from '@/lib/pb-server';
+import { CitizenRecord, RelationshipRecord } from '@/lib/pb-server';
 import { computeTreeLayout } from '@/lib/tree-utils';
 import { Node, Edge } from '@xyflow/react';
 
@@ -12,23 +12,15 @@ const FamilyTreeCanvas = dynamic(
 
 interface FamilyTreeProps {
   citizen: CitizenRecord;
+  relationships: RelationshipRecord[];
 }
 
 /**
  * US-401 & US-402: Componente principal del Árbol Genealógico.
- * Obtiene los datos en el servidor y prepara el layout antes de enviar al cliente.
+ * Recibe los datos y prepara el layout antes de enviar al cliente.
  */
-export default async function FamilyTree({ citizen }: FamilyTreeProps) {
-  // 1. Obtener todas las relaciones del ciudadano actual
-  const relationships = await getRelationshipsByCitizenId(citizen.id);
-
-  if (relationships.length === 0) {
-    return (
-      <div className="p-12 text-center border-2 border-dashed border-stone-200 rounded-3xl">
-        <p className="text-secondary font-sans italic">Aún no se han registrado vínculos para este perfil patrimonial.</p>
-      </div>
-    );
-  }
+export default function FamilyTree({ citizen, relationships }: FamilyTreeProps) {
+  if (relationships.length === 0) return null;
 
   // 2. Transformar registros en Nodos y Aristas para React Flow
   const nodeMap = new Map<string, Node>();

@@ -5,10 +5,12 @@ All notable changes to the KUYEN project will be documented in this file.
 ### [0.2.1] - 2026-04-12
 
 ### Added
-- **Premium Nodes (US-403)**: Implemented `CitizenTreeNode` with custom avatars, Serif typography, and dynamic states for the current heritage record.
-- **Node Detail Panel (US-406)**: Created a mobile-first Bottom Sheet component for extended family data with swipe-to-close gestures.
-- **Improved Interaction**: Added automatic panel closing on map pan/click and enriched node data injection.
-- **PB Helper**: Integrated `getPBImageUrl` utility for standardized multi-media retrieval.
+- **Finalización de Épica 4**: Cierre funcional de la visualización genealógica.
+- **Fullscreen nativo (US-405)**: Implementación de `TreeFullscreenModal` usando la API `<dialog>` y unidades `100dvh/w` para máxima compatibilidad móvil.
+- **Estado Vacío / Participación (US-409)**: Nuevo componente `TreeContributePrompt` con invitación a colaborar para registros sin datos familiares.
+- **Refactor Arquitectónico**: Movido el fetch de relaciones a nivel de página (`MemorialPage`) para renderizado condicional optimizado.
+- **Premium Nodes (US-403)**: Implemented `CitizenTreeNode` with custom avatars, Serif typography, and dynamic states.
+- **Node Detail Panel (US-406)**: Created a mobile-first Bottom Sheet component with swipe-to-close gestures.
 
 ### [0.2.0] - 2026-04-11
 
