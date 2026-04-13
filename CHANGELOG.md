@@ -11,6 +11,13 @@ All notable changes to the KUYEN project will be documented in this file.
 - **Auditoría**: Marcado automático de `plate_printed` en PocketBase tras la generación exitosa.
 - **Acceso Admin**: Botón de descarga directa en la vista de edición de ciudadano.
 
+### Añadido (US-510 — Dashboard de Auditoría y Métricas)
+- **Centro de Comando**: Transformación de la landing administrativa en un panel de control vivo con métricas agregadas.
+- **Métricas SSR**: Implementación de conteos paralelos con `Promise.all` para ciudadanos, hitos patrimoniales y placas QR impresas.
+- **Registro de Auditoría**: Nuevo `ActivityFeed` que despliega las últimas 5 acciones de moderación (aprobaciones/rechazos) con trazabilidad de administradores.
+- **Diseño Heritage**: Componentes `MetricCard` y `ActivityFeed` integrados con la estética solemne del proyecto.
+- **Cierre de Desarrollo**: Finalización de todas las épicas administrativas planeadas para la fase de lanzamiento.
+
 ### Seguridad (US-509 — Protección Anti-Spam)
 - **Rate Limiting**: Implementación de limitador de tasa en memoria (`lib/rate-limit.ts`) con una ventana de 10 minutos.
 - **Detección de IP Blindada**: Extracción de IP real compatible con proxies (X-Forwarded-For) para evitar suplantaciones de origen.

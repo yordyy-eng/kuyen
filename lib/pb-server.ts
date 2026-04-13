@@ -138,6 +138,60 @@ export async function getRelationshipsByCitizenId(citizenId: string): Promise<Re
   }
 }
 
+// ── QR Codes (US-205) ────────────────────────────────────────────────────────
+
+export interface QrRecord {
+  id: string;
+  code: string;
+  redirect_slug: string;
+  plate_printed: boolean;
+  citizen: string;
+  expand?: {
+    citizen?: CitizenRecord;
+  };
+}
+
+/**
+ * Obtiene el registro QR asociado a un ciudadano.
+ */
+export async function getQrByCitizenId(citizenId: string): Promise<QrRecord | null> {
+  try {
+    const pb = createPocketBaseClient();
+    return await pb.collection('qr_codes').getFirstListItem<QrRecord>(
+      `citizen='${citizenId}'`
+    );
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Obtiene el registro QR por su código alfanumérico.
+ */
+export async function getQrByCode(code: string): Promise<QrRecord | null> {
+  try {
+    const pb = createPocketBaseClient();
+    return await pb.collection('qr_codes').getFirstListItem<QrRecord>(
+      `code='${code}'`,
+      { expand: 'citizen' }
+    );
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Marca una placa como impresa (Auditoría silenciosa).
+ */
+export async function markPlateAsPrinted(id: string) {
+  try {
+    const pb = await createAuthenticatedPB();
+    await pb.collection('qr_codes').update(id, { plate_printed: true });
+  } catch (error) {
+    console.error('[pb-server] Error al marcar placa como impresa:', error);
+  }
+}
+
 // ── Proposals (restringido — requiere auth admin) ────────────────────────────
 
 /**
@@ -201,5 +255,70 @@ export async function getProposalById(id: string): Promise<ProposalRecord | null
     });
   } catch (error) {
     return null;
+  }
+}
+
+// ── Dashboard Metrics (US-510) ──────────────────────────────────────────────
+
+/**
+ * Obtiene el conteo total de ciudadanos.
+ */
+export async function getTotalCitizensCount(): Promise<number> {
+  try {
+    const pb = createPocketBaseClient();
+    const result = await pb.collection('citizens').getList(1, 1, { fields: 'id' });
+    return result.totalItems;
+  } catch (error) {
+    return 0;
+  }
+}
+
+/**
+ * Obtiene el conteo de ciudadanos con marca patrimonial.
+ */
+export async function getPatrimonialCitizensCount(): Promise<number> {
+  try {
+    const pb = createPocketBaseClient();
+    const result = await pb.collection('citizens').getList(1, 1, {
+      filter: 'is_patrimonial = true',
+      fields: 'id',
+    });
+    return result.totalItems;
+  } catch (error) {
+    return 0;
+  }
+}
+
+/**
+ * Obtiene el conteo de placas QR que han sido marcadas como impresas.
+ */
+export async function getPrintedQrPlatesCount(): Promise<number> {
+  try {
+    const pb = createPocketBaseClient();
+    const result = await pb.collection('qr_codes').getList(1, 1, {
+      filter: 'plate_printed = true',
+      fields: 'id',
+    });
+    return result.totalItems;
+  } catch (error) {
+    return 0;
+  }
+}
+
+/**
+ * Obtiene las propuestas recientemente aprobadas o rechazadas para el feed de actividad.
+ */
+export async function getRecentActivity(limit: number = 5): Promise<ProposalRecord[]> {
+  try {
+    const pb = await createAuthenticatedPB();
+    const result = await pb.collection('proposals').getList<ProposalRecord>(1, limit, {
+      filter: 'status != "pending"',
+      sort: '-reviewed_at',
+      expand: 'citizen,reviewer',
+    });
+    return result.items;
+  } catch (error) {
+    console.error('[pb-server] getRecentActivity error:', error);
+    return [];
   }
 }

@@ -6,10 +6,11 @@ services:
     image: ghcr.io/muchobien/pocketbase:latest
     container_name: kuyen-backend
     restart: unless-stopped
+    command: serve --http="0.0.0.0:8090" --dir="/usr/local/bin/pb_data"
     ports:
-      - "8091:8090" # Changed to 8091 to avoid conflict with WsToastNotification.exe on host
+      - "8091:8090"
     volumes:
-      - pocketbase_data:/pb/pb_data
+      - ./pb_data:/usr/local/bin/pb_data # Bind mount local correcto para esta imagen
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8090/api/health"]
       interval: 10s
@@ -28,11 +29,12 @@ services:
       - POCKETBASE_URL=http://pocketbase:8090
     depends_on:
       - pocketbase
-    # ARM64 specific optimization
     deploy:
       resources:
         limits:
           memory: 1G
 
 volumes:
+  # El volumen nombrado se mantiene por compatibilidad si se desea, 
+  # pero el servicio ahora usa el bind mount ./pb_data
   pocketbase_data:

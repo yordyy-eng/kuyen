@@ -147,11 +147,19 @@
         "name": "published",
         "type": "bool",
         "required": false
+      },
+      {
+        "name": "is_patrimonial",
+        "type": "bool",
+        "required": false
+      },
+      {
+        "name": "exemption_active",
+        "type": "bool",
+        "required": false
       }
     ],
-    "indexes": [
-      "CREATE UNIQUE INDEX `idx_slug` ON `citizens` (`slug`)"
-    ],
+    "indexes": [],
     "listRule": "",
     "viewRule": "",
     "createRule": null,
@@ -201,9 +209,7 @@
         }
       }
     ],
-    "indexes": [
-      "CREATE UNIQUE INDEX `idx_code` ON `qr_codes` (`code`)"
-    ],
+    "indexes": [],
     "listRule": "",
     "viewRule": "",
     "createRule": null,
@@ -367,7 +373,7 @@
         "type": "relation",
         "required": false,
         "options": {
-          "collectionId": "pbc_3142635823",
+          "collectionId": "_superusers",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1
