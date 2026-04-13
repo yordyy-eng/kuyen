@@ -8,6 +8,8 @@ import { ADMIN_COOKIE_NAME } from '@/lib/auth-constants';
 interface CacheEntry {
   slug: string;
   expiry: number;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
