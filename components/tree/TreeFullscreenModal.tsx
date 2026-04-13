@@ -48,7 +48,7 @@ export default function TreeFullscreenModal({
 
   const onNodeClick = (_: any, node: Node) => {
     if (node.id !== currentCitizenId) {
-      setSelectedCitizen(node.data as CitizenRecord);
+      setSelectedCitizen(node.data as unknown as CitizenRecord);
       setIsPanelOpen(true);
     }
   };

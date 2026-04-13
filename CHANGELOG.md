@@ -2,6 +2,24 @@
 
 All notable changes to the KUYEN project will be documented in this file.
 
+### [0.4.0] - 2026-04-13
+
+### Added
+- **Admin Auth (Epic 5 / US-503)**: Implementado el muro de seguridad del Panel de Administración.
+- **Proxy Consolidado**: Actualizado `proxy.ts` con matcher dual (`/q/:code*` + `/admin/:path*`). La lógica de protección de rutas intercepta todas las rutas `/admin/*` excepto `/admin/login`.
+- **Server Actions de Auth**: Creado `app/actions/auth.ts` con `adminLogin` (usando `pb.collection('_superusers')` — API correcta para PocketBase v0.23+) y `adminLogout`.
+- **Cookie de Sesión Segura**: `kuyen_admin_session` con flags `httpOnly: true`, `sameSite: 'lax'`, `secure` en producción y `maxAge` de 8 horas.
+- **Admin Layout**: `app/admin/layout.tsx` con sidebar de navegación (doble defensa per Next.js 16) y diseño condicional (sin sidebar en página de login para evitar bucles de redirección).
+- **Login Page**: `app/admin/login/page.tsx` con formulario de acceso solemne y mensajes de error genéricos (sin information leakage).
+- **Admin Dashboard**: `app/admin/page.tsx` con widgets de acceso rápido a futuras secciones del panel.
+
+### Security
+- Mensajes de error genéricos (`"Credenciales incorrectas."`) que no revelan si el email o la contraseña son incorrectos.
+- Cookie de sesión inaccesible al JavaScript del cliente (`httpOnly`).
+- PocketBase `_superusers` con `createRule: null` (solo creación vía dashboard/API).
+
+---
+
 ### [0.3.0] - 2026-04-12
 
 ### Added

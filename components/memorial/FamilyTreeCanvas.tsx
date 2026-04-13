@@ -9,7 +9,7 @@ import {
   Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import CitizenTreeNode from '@/components/tree/CitizenTreeNode';
+import CitizenTreeNode, { CitizenNodeData } from '@/components/tree/CitizenTreeNode';
 import NodeDetailPanel from '@/components/tree/NodeDetailPanel';
 import TreeFullscreenModal from '@/components/tree/TreeFullscreenModal';
 import { CitizenRecord } from '@/lib/pb-server';
@@ -37,7 +37,7 @@ export default function FamilyTreeCanvas({ initialNodes, initialEdges, currentCi
 
   const onNodeClick = (_: any, node: Node) => {
     if (node.id !== currentCitizenId) {
-      setSelectedCitizen(node.data as CitizenRecord);
+      setSelectedCitizen(node.data as unknown as CitizenNodeData);
       setIsPanelOpen(true);
     }
   };

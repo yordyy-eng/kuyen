@@ -13,9 +13,10 @@ export interface CitizenNodeData extends CitizenRecord {
  * US-403: Nodo personalizado para el árbol genealógico.
  * Diseño solemne con soporte para avatares y estados activos.
  */
-export default function CitizenTreeNode({ data }: NodeProps<{ data: CitizenNodeData }>) {
-  const { full_name, birth_year, death_year, relationLabel, isCurrent } = data.data;
-  const imageUrl = getPBImageUrl(data.data);
+export default function CitizenTreeNode({ data: rawData }: NodeProps) {
+  const data = rawData as unknown as CitizenNodeData;
+  const { full_name, birth_year, death_year, relationLabel, isCurrent } = data;
+  const imageUrl = getPBImageUrl(data);
   const initials = full_name
     .split(' ')
     .map((n) => n[0])
