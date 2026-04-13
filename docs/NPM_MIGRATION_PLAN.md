@@ -36,3 +36,4 @@ Como los certificados de Certbot nativo están en `/etc/letsencrypt`, NPM no los
 
 ---
 UGA. Bisturí preparado. Esperando la ventana de mantenimiento. 🦍💉☁️
+# Proyecto KUYEN - Certificación 2026.
