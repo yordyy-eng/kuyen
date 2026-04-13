@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { createAuthenticatedPB, PB_URL } from '@/lib/pb-server';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { ADMIN_COOKIE_NAME } from '@/lib/auth-constants';
 import { headers } from 'next/headers';
 import { checkRateLimit } from '@/lib/rate-limit';
 
@@ -83,6 +85,12 @@ export async function submitProposal(prevState: any, formData: FormData) {
 // ── US-505: Admin — Aprobar Propuesta ───────────────────────────────────────
 
 export async function approveProposal(formData: FormData) {
+  // Hardening: Verificación de sesión admin
+  const cookieStore = await cookies();
+  if (!cookieStore.get(ADMIN_COOKIE_NAME)) {
+    throw new Error('No autorizado.');
+  }
+
   const pb = await createAuthenticatedPB();
   const proposalId = formData.get('proposalId') as string;
   const citizenId = formData.get('citizenId') as string;
@@ -128,7 +136,7 @@ export async function approveProposal(formData: FormData) {
     revalidatePath('/');
     
   } catch (error) {
-    console.error('Approve Proposal Error:', error);
+    console.error('[Security Audit] Approve Proposal failed');
     throw new Error('No se pudo procesar la aprobación.');
   }
 
@@ -138,6 +146,12 @@ export async function approveProposal(formData: FormData) {
 // ── US-505: Admin — Rechazar Propuesta ──────────────────────────────────────
 
 export async function rejectProposal(formData: FormData) {
+  // Hardening: Verificación de sesión admin
+  const cookieStore = await cookies();
+  if (!cookieStore.get(ADMIN_COOKIE_NAME)) {
+    throw new Error('No autorizado.');
+  }
+
   const pb = await createAuthenticatedPB();
   const proposalId = formData.get('proposalId') as string;
   const reviewerNote = formData.get('reviewer_note') as string;

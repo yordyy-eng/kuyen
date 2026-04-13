@@ -2,8 +2,10 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { createAuthenticatedPB } from '@/lib/pb-server';
+import { createAuthenticatedPB, PB_URL } from '@/lib/pb-server';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { ADMIN_COOKIE_NAME } from '@/lib/auth-constants';
 
 const citizenUpdateSchema = z.object({
   id: z.string().min(1),
@@ -23,6 +25,12 @@ const citizenUpdateSchema = z.object({
  * Maneja metadatos, toggles de estado y reemplazo de retrato.
  */
 export async function updateCitizen(prevState: any, formData: FormData) {
+  // Hardening: Verificación explícita de sesión admin
+  const cookieStore = await cookies();
+  if (!cookieStore.get(ADMIN_COOKIE_NAME)) {
+    return { success: false, error: 'No autorizado.' };
+  }
+
   const pb = await createAuthenticatedPB();
 
   // 1. Extraer booleanos manualmente ya que FormData.get() devuelve strings o null
@@ -77,8 +85,9 @@ export async function updateCitizen(prevState: any, formData: FormData) {
     revalidatePath(`/admin/ciudadanos/${id}/editar`);
 
   } catch (error: any) {
-    console.error('Update Citizen Error:', error.response?.data || error.message);
-    return { success: false, error: 'Error al actualizar el ciudadano en la base de datos.' };
+    // Audit: Limpieza de logs. Solo logueamos el mensaje de error, no el objeto completo.
+    console.error('[Security Audit] Update Citizen failed');
+    return { success: false, error: 'Error al actualizar el ciudadano.' };
   }
 
   // Redirigir al listado tras éxito

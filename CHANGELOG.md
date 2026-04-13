@@ -18,6 +18,11 @@ All notable changes to the KUYEN project will be documented in this file.
 - **Diseño Heritage**: Componentes `MetricCard` y `ActivityFeed` integrados con la estética solemne del proyecto.
 - **Cierre de Desarrollo**: Finalización de todas las épicas administrativas planeadas para la fase de lanzamiento.
 
+### Seguridad (US-511 — Auditoría y Hardening Final)
+- **Capa de Mutación**: Implementada verificación de sesión redundante en todos los Server Actions administrativos (`updateCitizen`, `approveProposal`, `rejectProposal`).
+- **Blindaje QR**: Reforzada la validación de acceso en `/api/qr-plate/[code]` mediante middleware de función interno.
+- **Sanitización de Logs**: Eliminación de logs que exponían trazas internas o datos de registros durante fallos de servidor.
+
 ### Seguridad (US-511 — Parche de Vulnerabilidad QR)
 - **Fix Zero-Day**: Blindado el endpoint público `/api/qr-plate/[code]` mediante verificación de sesión administrativa obligatoria.
 - **Prevención de DoS**: Evita la ejecución arbitraria de generación de SVG y la corrupción del contador de auditoría por usuarios no autorizados.
