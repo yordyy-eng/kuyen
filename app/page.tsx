@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import CitizenCard from '@/components/CitizenCard';
+import PatrimonialArchive from '@/components/PatrimonialArchive';
 import { listCitizens } from '@/lib/pb-server';
 
 /**
@@ -24,36 +24,8 @@ export default async function Home() {
       </div>
 
       <main className="relative z-10">
-        {/* 2. Hero Section: Glassmorphism & Minimalist Search */}
-        <section className="pt-24 pb-16 px-4">
-          <div className="max-w-4xl mx-auto backdrop-blur-sm bg-white/40 border border-amber-900/10 shadow-md rounded-2xl p-8 md:p-12 text-center">
-            <div className="mb-6 inline-block py-1 px-4 bg-amber-900/5 rounded-full">
-              <span className="text-[10px] uppercase tracking-[0.3em] font-sans font-medium text-amber-900/70">
-                Archivo Vivo del Patrimonio
-              </span>
-            </div>
-            
-            <h1 className="text-5xl md:text-7xl font-serif text-primary leading-tight mb-8">
-              Kuyen <span className="text-gold italic">Heritage</span>
-            </h1>
-
-            {/* Búsqueda Minimalista */}
-            <div className="max-w-lg mx-auto relative group">
-              <input 
-                type="text" 
-                placeholder="Buscar por nombre o apellido..." 
-                className="w-full bg-white/60 border border-amber-900/20 rounded-lg px-5 py-4 font-sans text-sm focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/30 transition-all placeholder:text-secondary/50 placeholder:italic"
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary/40 group-focus-within:text-gold/60 transition-colors">
-                🔎
-              </span>
-            </div>
-
-            <div className="mt-8 text-secondary/70 font-sans text-xs uppercase tracking-widest">
-              Explora la memoria colectiva de Angol
-            </div>
-          </div>
-        </section>
+        {/* 2. Patrimonial Archive (Hero & Grid Logic) */}
+        <PatrimonialArchive initialCitizens={citizens} />
 
         {/* 3. Historical Gallery (Modern Heritage) */}
         <section className="py-20 bg-amber-900/[0.02] border-y border-amber-900/5">
@@ -84,40 +56,6 @@ export default async function Home() {
               </div>
             </div>
           </div>
-        </section>
-
-        {/* 4. Citizens List Archive */}
-        <section className="container mx-auto px-4 py-24">
-          <div className="mb-12">
-            <h2 className="text-3xl font-serif text-primary border-b border-gold/20 pb-4 inline-block">
-              Registros <span className="italic text-gold">Patrimoniales</span>
-            </h2>
-          </div>
-
-          {citizens.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
-              {citizens.map((citizen) => (
-                <CitizenCard 
-                  key={citizen.id}
-                  name={citizen.full_name}
-                  slug={citizen.slug}
-                  role={citizen.patrimonial_category}
-                  era={citizen.patrimonial_category}
-                  year={citizen.death_year ? citizen.death_year.toString() : undefined}
-                  bio={citizen.biography}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white/40 backdrop-blur-sm p-12 text-center border border-amber-900/10 rounded-xl max-w-2xl mx-auto shadow-sm">
-              <p className="text-secondary font-serif italic text-xl mb-2">
-                Digitalizando la memoria de Angol...
-              </p>
-              <p className="text-[10px] text-secondary/60 uppercase tracking-widest font-sans">
-                El archivo patrimonial se actualiza en tiempo real
-              </p>
-            </div>
-          )}
         </section>
       </main>
     </div>
