@@ -1,0 +1,565 @@
+﻿
+KUYEN
+Sistema de Gestión de Cementerios con Valor Patrimonial
+
+
+PRODUCT REQUIREMENTS DOCUMENT (PRD)
+v1.0 — Abril 2025
+
+
+Cementerio Municipal de Angol · La Araucanía · Chile
+adelchen.cl
+
+
+PARTE 1: Resumen Ejecutivo y Arquitectura (PRD)
+1. Visión del Producto y Objetivos
+"KUYEN convierte cada lápida del Cementerio Municipal de Angol en una puerta digital hacia la historia viva de la ciudad, devolviendo dignidad a los que ya no pueden hablar y conectando a las familias anglinas con su memoria colectiva."
+
+Problema que resuelve
+El Cementerio Municipal de Angol alberga figuras históricas, loncos mapuche, educadores pioneros y fundadores cuyas tumbas se deterioran sin documentación accesible. Los familiares no tienen canal oficial para aportar fotografías o biografías, y la administración municipal carece de herramientas digitales para gestionar el patrimonio funerario.
+
+Objetivos Estratégicos
+
+Principios de Diseño No Negociables
+Light Mode obligatorio. Los visitantes leen bajo luz solar directa. Contraste mínimo WCAG AA (4.5:1). Fondo blanco, texto negro.
+Mobile-First extremo. El diseño parte del viewport de 375px. Desktop es una mejora progresiva.
+Sin dependencia de JS para contenido público. Las páginas de memorial renderizan con SSG/SSR.
+QR inmutables. La URL corta /q/c001 nunca cambia aunque el slug del perfil se edite.
+Soberanía de datos. Todo alojado en OCI ARM propio. Ningún dato personal sale a terceros.
+
+2. User Personas
+Persona A — Visitante del Cementerio
+
+Persona B — Familiar / Contribuyente
+
+Persona C — Curador / Administrador Municipal
+
+3. Diagrama Arquitectónico
+KUYEN se despliega íntegramente sobre Oracle Cloud Infrastructure (OCI) con arquitectura ARM Ampere A1 Flex. Todo el stack corre sobre Docker Compose dentro de una instancia Ubuntu 22.04 LTS.
+
+
+Flujo de petición QR físico
+Visitante escanea código QR de la placa física.
+Móvil solicita: GET https://kuyen.cl/q/c001
+Next.js Middleware (edge runtime) intercepta la petición.
+Consulta caché en memoria: si existe → redirect 307 inmediato.
+Si no hay caché → consulta PocketBase: SELECT redirect_slug WHERE code='c001'.
+Almacena en caché (TTL 5 minutos) y redirige 307 a /memorial/saavedra.
+Next.js SSG page renderizada → HTML completo enviado al móvil.
+Fire-and-forget: incrementa visit_count del citizen en PocketBase.
+
+4. Modelo de Datos Base — Colecciones PocketBase
+PocketBase usa SQLite como motor de base de datos. Todas las colecciones se crean desde el Admin UI de PocketBase (/_/) y se exportan como pb_schema.json para versionar en el repositorio.
+Colección: citizens
+
+Colección: relationships
+
+Colección: proposals (crowdsourcing)
+
+Colección: qr_codes
+
+Colección: tickets (mantención)
+
+Reglas de API por Colección
+
+PARTE 2: Product Backlog Completo
+Convenciones: Story Points en escala Fibonacci (1,2,3,5,8,13). Prioridad: P0 = bloqueante, P1 = crítico, P2 = importante. Definición de Terminado (DoD) global aplicable a todas las historias.
+
+Épica 1: Infraestructura Soberana y CI/CD E2E
+Objetivo: Stack OCI completamente dockerizado, Nginx Proxy Manager con HTTPS, PocketBase operativo con backup, y pipeline CI/CD que ejecuta Playwright en cada push a main.
+
+
+US-101  Provisioning del servidor OCI ARM
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET https://kuyen.cl → responde HTTP 200 (Nginx levantado)
+✓  Header Strict-Transport-Security presente en todas las respuestas
+✓  Certificado TLS válido y no expirado (Let's Encrypt)
+✓  GET http://kuyen.cl → redirige 301 a https://kuyen.cl
+
+Tareas Técnicas
+
+US-102  Stack Docker Compose base
+
+Criterios de Aceptación (Playwright E2E)
+✓  docker compose up -d levanta los 3 servicios sin errores
+✓  GET https://api.kuyen.cl/_/ → responde 200 (PocketBase Admin UI)
+✓  GET https://kuyen.cl → responde 200 (Next.js)
+✓  Los contenedores se reinician automáticamente tras docker restart del servidor
+✓  El volumen pocketbase_data persiste datos tras docker compose down && up
+
+Tareas Técnicas
+
+US-103  Pipeline CI/CD con GitHub Actions
+
+Criterios de Aceptación (Playwright E2E)
+✓  Push a main → pipeline completa en < 10 minutos
+✓  Si Playwright E2E falla → deploy se aborta y no llega a producción
+✓  La imagen Docker está publicada en GHCR con tag del SHA del commit
+✓  SSH ejecuta docker compose pull && docker compose up -d sin downtime perceptible
+✓  Notificación a canal de Slack en caso de fallo del pipeline
+
+Tareas Técnicas
+
+US-104  Backup automático de PocketBase
+
+Criterios de Aceptación (Playwright E2E)
+✓  Backup se ejecuta diariamente a las 03:00 (hora Chile)
+✓  El archivo de backup contiene SQLite completo y el directorio pb_storage
+✓  Los últimos 30 días de backups se conservan en OCI Object Storage
+✓  Email de alerta si el backup falla (exit code != 0)
+✓  Test de restauración ejecutable desde documentación en < 30 minutos
+
+Tareas Técnicas
+
+US-105  Suite de pruebas Playwright: infraestructura base
+
+Criterios de Aceptación (Playwright E2E)
+✓  npx playwright test ejecuta sin errores en un repo limpio
+✓  Los tests simulan Pixel 7 (412×915) y iPhone 14 (390×844)
+✓  Existe helper checkLightMode(page) que verifica fondo ≥ #f0f0f0 y texto ≤ #333333
+✓  El reporte HTML de Playwright se genera en playwright-report/
+✓  Smoke tests cubren: home → carga, /q/c001 → redirige, /memorial/test → 200
+
+Tareas Técnicas
+
+
+Épica 2: Motor de BBDD y Middleware de Redirección QR
+Objetivo: PocketBase configurado con todas las colecciones y reglas de acceso. Middleware de Next.js resuelve QR cortos a slugs permanentes en el edge sin llamadas a BD en la ruta crítica.
+
+
+US-201  Configuración de colecciones PocketBase
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /api/collections/citizens/records?filter=(published=true) → HTTP 200 sin autenticación
+✓  GET /api/collections/proposals/records → HTTP 401 sin token (datos privados)
+✓  POST /api/collections/proposals/records → HTTP 200 sin autenticación (contribución pública)
+✓  PATCH /api/collections/citizens/records/:id → HTTP 401 sin token admin
+✓  Existe al menos 1 citizen de prueba con published=true y slug='test-citizen'
+
+Tareas Técnicas
+
+US-202  Middleware de redirección QR (Next.js Edge)
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /q/c001 → redirige 307 a /memorial/saavedra en < 200ms
+✓  GET /q/c999 → responde 404 con página de error amigable (no pantalla blanca)
+✓  Test simula Pixel 7 con throttling "Slow 4G" — redirección completa < 2 segundos
+✓  GET /q/c001 → incrementa visit_count del citizen (verificar via API)
+✓  URL corta /q/c001 funciona correctamente tras cambiar el slug del ciudadano
+✓  La caché en memoria (Map) tiene TTL de 5 minutos
+
+Tareas Técnicas
+
+US-203  API client de PocketBase para Next.js
+
+Criterios de Aceptación (Playwright E2E)
+✓  import { getCitizen, listCitizens } from '@/lib/pb' funciona sin errores TypeScript
+✓  Los tipos retornados coinciden con el esquema de PocketBase (generados automáticamente)
+✓  Funciones del servidor usan fetch nativo de Next.js con revalidate configurado
+✓  Funciones del cliente usan pocketbase SDK con singleton pattern
+
+Tareas Técnicas
+
+US-204  Sistema de invalidación de caché QR
+
+Criterios de Aceptación (Playwright E2E)
+✓  Tras cambiar redirect_slug en PocketBase, GET /q/c001 apunta a la nueva URL en ≤ 5 min
+✓  POST /api/revalidate?secret=XXX retorna 200 y limpia el caché del middleware
+✓  PocketBase hook llama automáticamente a /api/revalidate cuando se actualiza qr_codes
+✓  El endpoint está protegido con secret token
+
+Tareas Técnicas
+
+US-205  Generador de placas QR para impresión
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /admin/citizens/:id/qr-plate → descarga SVG con QR + nombre + años + URL corta
+✓  El SVG tiene dimensiones listas para impresión en acero/cerámica
+✓  El QR es legible por la cámara del Pixel 7 en el test Playwright
+✓  El nombre del archivo descargado es placa-qr-{code}-{slug}.svg
+✓  Marca plate_printed=true en qr_codes automáticamente al descargar
+
+Tareas Técnicas
+
+
+Épica 3: Frontend Mobile-First y Directorio Público
+Objetivo: Toda la capa pública en Next.js — inicio, directorio, página memorial — garantizando Light Mode de alto contraste, Lighthouse ≥ 85 en móvil, y cobertura Playwright E2E completa.
+
+
+US-301  Configuración base del proyecto Next.js
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET / → responde HTTP 200 en Mobile Chrome (Pixel 7)
+✓  El fondo de <body> es blanco puro (#ffffff) — verificado con page.evaluate()
+✓  El color de texto principal es ≤ #1a1a1a (contraste WCAG AA garantizado)
+✓  NO existe ningún elemento con background-color oscuro en el viewport inicial
+✓  Lighthouse Performance ≥ 85 en simulación móvil
+
+Tareas Técnicas
+
+US-302  Layout raíz y componentes de navegación
+
+Criterios de Aceptación (Playwright E2E)
+✓  Nav bar visible en viewport 375px sin scroll horizontal
+✓  El logo KUYEN tiene font-size ≥ 18px
+✓  Menú hamburguesa abre en < 300ms (CSS transition)
+✓  Menú cubre el viewport completo al abrirse (full-screen en móvil)
+✓  Skip-to-content link es el primer elemento enfocable
+
+Tareas Técnicas
+
+US-303  Página de inicio (Home)
+
+Criterios de Aceptación (Playwright E2E)
+✓  H1 visible en fold sin scroll en Pixel 7 (412×915)
+✓  H1 tiene font-size ≥ 32px
+✓  Botón "Ver ciudadanos patrimoniales" tiene height ≥ 48px (touch target mínimo)
+✓  Las 3 estadísticas son visibles sin scroll
+✓  LCP ≤ 2.5 segundos en throttling Slow 4G
+✓  No hay imágenes sin atributo alt
+
+Tareas Técnicas
+
+US-304  Directorio público de ciudadanos patrimoniales
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /directorio → HTTP 200, lista visible en Pixel 7
+✓  Cada card muestra: nombre, categoría, años, foto en miniatura
+✓  El campo de búsqueda filtra en tiempo real sin reload (< 300ms)
+✓  Filtrar por categoría "Educadores" → solo muestra badges "Educador"
+✓  Con 0 resultados: mensaje "No se encontraron ciudadanos" (no pantalla vacía)
+✓  La URL incluye filtros activos como query params (?categoria=educador&q=mercedes)
+
+Tareas Técnicas
+
+US-305  Componente CitizenCard
+
+Criterios de Aceptación (Playwright E2E)
+✓  Card tiene min-height de 120px
+✓  El nombre del ciudadano tiene font-size ≥ 16px
+✓  El badge de categoría tiene contraste ≥ 4.5:1
+✓  La imagen de retrato tiene alt text con el nombre del ciudadano
+✓  La card completa es clickeable (no solo el título)
+✓  En ausencia de foto, se muestra avatar con iniciales del ciudadano
+
+Tareas Técnicas
+
+US-306  Página de Memorial Individual
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /memorial/test-citizen → HTTP 200 en Pixel 7 y iPhone 14
+✓  GET /memorial/slug-inexistente → HTTP 404 con página de error amigable
+✓  El nombre del ciudadano es el único H1 de la página
+✓  H1 tiene font-size ≥ 28px en mobile
+✓  Foto principal ocupa ancho completo en móvil (height ≥ 240px)
+✓  El texto biográfico tiene font-size ≥ 16px y line-height ≥ 1.6
+✓  Botón "Reportar daño" tiene height ≥ 48px
+✓  Los metadatos OG son correctos para compartir por WhatsApp
+✓  La página funciona con JS deshabilitado (SSR puro)
+✓  La galería de fotos se puede deslizar con gesture swipe
+
+Tareas Técnicas
+
+US-307  Componentes de la página de memorial
+
+Criterios de Aceptación (Playwright E2E)
+✓  AudioPlayer: botón play/pause con aria-label "Reproducir audio memorial de {nombre}"
+✓  AudioPlayer: slider de progreso operable con teclado
+✓  PhotoGallery: cada imagen tiene alt descriptivo con posición
+✓  PhotoGallery: swipe horizontal cambia la foto activa
+✓  LocationSection: link "Ver en Google Maps" abre en nueva pestaña
+✓  MemorialActions: modal "Reportar daño" abre con focus trap correcto
+
+Tareas Técnicas
+
+US-308  Página 404 y páginas de error accesibles
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /memorial/slug-inexistente → HTTP 404, página Light Mode con mensaje claro
+✓  GET /q/c999 → HTTP 404, misma página de error
+✓  La página 404 muestra el logo KUYEN y botón "Volver al directorio"
+✓  No hay ningún elemento con texto "undefined", "null" o stack trace visible
+
+Tareas Técnicas
+
+US-309  SEO, OpenGraph y metadatos para compartir por WhatsApp
+
+Criterios de Aceptación (Playwright E2E)
+✓  <meta property="og:title"> contiene el nombre del ciudadano
+✓  <meta property="og:image"> apunta a la foto del ciudadano
+✓  <meta property="og:description"> contiene short_bio
+✓  El sitemap.xml incluye todas las URLs de ciudadanos publicados
+✓  El robots.txt permite indexación pública y bloquea /admin/*
+
+Tareas Técnicas
+
+US-310  Formulario de reporte de daños (modal)
+
+Criterios de Aceptación (Playwright E2E)
+✓  Click en "Reportar daño" → abre modal en < 200ms
+✓  El modal tiene focus trap (Tab no sale del modal)
+✓  El campo "Nombre" es required con mensaje de error en español
+✓  El campo de foto acepta JPG/PNG (verificado con file input mock)
+✓  Submit exitoso → mensaje "Reporte enviado. La municipalidad lo revisará en 72 horas."
+✓  Submit crea ticket en PocketBase con status=open y origin=qr_public
+✓  Escape key cierra el modal
+
+Tareas Técnicas
+
+US-311  Pruebas de rendimiento y Light Mode sistemático
+
+Criterios de Aceptación (Playwright E2E)
+✓  Test de Light Mode pasa en /, /directorio y /memorial/test-citizen
+✓  Ningún elemento con background tiene luminosidad < 0.85 en viewport inicial
+✓  Todos los <p> tienen font-size ≥ 16px
+✓  Todos los botones/links tienen height ≥ 48px (touch targets)
+✓  LCP ≤ 2500ms en throttling "Slow 4G"
+✓  axe-core no reporta violaciones de nivel WCAG AA
+
+Tareas Técnicas
+
+
+Épica 4: Visualización de Árboles Genealógicos (React Flow)
+Objetivo: Visualizador de árboles genealógicos interactivo embebido en las páginas de memorial, sin conflictos de scroll en móvil, nodos personalizados con foto, layout Dagre en el servidor, y cobertura Playwright de gestos táctiles.
+
+Decisiones de Arquitectura de la Épica
+Gestión del conflicto de scroll móvil: Botón "Activar mapa" que habilita la interacción del canvas solo cuando el usuario lo solicita. En reposo, el canvas es estático y el scroll de página funciona normalmente.
+Layout automático: Dagre ejecutado en el servidor (Server Component) para calcular posiciones x,y antes de enviarlos al cliente. React Flow recibe posiciones precalculadas, eliminando saltos visuales.
+Carga diferida: React Flow y Dagre (~380KB) se cargan con next/dynamic y ssr: false únicamente cuando el componente entra en viewport. Un citizen sin relaciones no recibe ningún bundle de React Flow.
+
+
+US-401  Instalación y configuración React Flow + Dagre
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /memorial/test-citizen-with-tree → carga en < 3s en Slow 4G
+✓  El bundle de React Flow NO aparece en el network waterfall inicial (carga diferida)
+✓  Al hacer scroll hasta el árbol aparece el skeleton de carga del canvas
+✓  El árbol NO se renderiza en el HTML del servidor (ssr: false verificado)
+✓  En citizen SIN relaciones, el componente de árbol no se monta
+
+Tareas Técnicas
+
+US-402  Cálculo de layout con Dagre en el servidor
+
+Criterios de Aceptación (Playwright E2E)
+✓  Los nodos en el canvas NO se superponen entre sí
+✓  El nodo del ciudadano actual está en el centro del canvas en la vista inicial
+✓  Layout top-down para relaciones parent/child
+✓  Un árbol de 10 nodos se renderiza sin overflow del canvas
+✓  Los datos de posición están pre-calculados en el HTML (no hay re-layout JS inicial)
+
+Tareas Técnicas
+
+US-403  Nodo personalizado CitizenTreeNode
+
+Criterios de Aceptación (Playwright E2E)
+✓  Cada nodo muestra: foto circular (o iniciales), nombre y años de vida
+✓  El nodo del ciudadano actual tiene borde dorado de 2px y fondo kuyen-gold-surface
+✓  El nombre en el nodo tiene font-size ≥ 12px
+✓  La foto circular tiene diameter ≥ 40px
+✓  Click en nodo secundario navega a /memorial/{slug}
+✓  El nodo actual NO es clicable
+✓  Los handles de React Flow están ocultos al usuario
+
+Tareas Técnicas
+
+US-404  Canvas principal FamilyTreeCanvas
+
+Criterios de Aceptación (Playwright E2E)
+✓  El canvas ocupa el 100% del ancho del contenedor
+✓  El nodo del ciudadano actual está centrado en el viewport inicial (fitView)
+✓  Gesto pinch-to-zoom cambia el zoom (simulado en Playwright)
+✓  Zoom mínimo 0.4x, máximo 2x
+✓  Controles de zoom (+/-) con aria-label en español y min-height 44px
+✓  El fondo del canvas es #faf9f7 (kuyen-bg-subtle) — NO oscuro
+✓  El canvas no dispara scroll de página cuando isInteractive=true
+
+Tareas Técnicas
+
+US-405  Modo pantalla completa del árbol en móvil
+
+Criterios de Aceptación (Playwright E2E)
+✓  Botón "Ver en pantalla completa" visible en la esquina del canvas
+✓  Click → canvas ocupa 100dvh y 100dvw
+✓  El overlay tiene fondo blanco (no oscuro)
+✓  Botón "Cerrar" con min-height 48px visible en esquina superior derecha
+✓  Escape cierra el modo pantalla completa
+✓  En iOS Safari, el canvas usa 100dvh (no 100vh)
+
+Tareas Técnicas
+
+US-406  Panel lateral de detalle al tocar un nodo
+
+Criterios de Aceptación (Playwright E2E)
+✓  Click en nodo secundario → panel deslizante aparece desde abajo (bottom sheet)
+✓  El panel muestra: foto, nombre, años, categoría, short_bio y botón "Ver perfil completo"
+✓  El panel se puede cerrar deslizando hacia abajo o pulsando el botón X
+✓  El panel tiene min-height 200px y max-height 60dvh
+✓  Botón "Ver perfil completo" navega a /memorial/{slug}
+
+Tareas Técnicas
+
+US-407  Integración del árbol en la página de memorial
+
+Criterios de Aceptación (Playwright E2E)
+✓  /memorial/test-citizen-with-tree → sección árbol visible tras scroll
+✓  /memorial/test-citizen-no-relations → sección árbol completamente ausente del DOM
+✓  La sección tiene id="arbol-genealogico" para link directo
+✓  TTI con árbol ≤ 4s en Slow 4G
+✓  El árbol no bloquea el scroll de la página cuando isInteractive=false
+
+Tareas Técnicas
+
+US-408  Tests E2E de gestos táctiles del árbol
+
+Criterios de Aceptación (Playwright E2E)
+✓  Test de activación: click "Toca para explorar" → canvas activa panOnDrag
+✓  Test de pan: touchstart → touchmove 100px → viewport del canvas se desplaza
+✓  Test de nodo: tap en nodo secundario → NodeDetailPanel con nombre correcto
+✓  Test de swipe-down: swipe 90px abajo en NodeDetailPanel → panel se cierra
+✓  Test de pantalla completa: click botón → dialog visible con 100dvh
+✓  Test de teclado: Tab navega entre nodos, Enter abre panel, Escape cierra
+✓  Todos los tests pasan en Pixel 7 y iPhone 14
+
+Tareas Técnicas
+
+US-409  Estado vacío y árbol de un solo nodo
+
+Criterios de Aceptación (Playwright E2E)
+✓  /memorial/citizen-sin-relaciones → sección árbol NO existe en el DOM
+✓  En cambio, aparece sección "¿Conoces la historia de esta familia?"
+✓  La sección tiene botón "Contribuir información" → /contribuir/{slug}
+✓  No hay ningún elemento de React Flow montado en la página
+
+Tareas Técnicas
+
+
+Épica 5: Crowdsourcing y Bandeja de Moderación Administrativa
+Objetivo: Flujo completo de contribución ciudadana — formulario público con upload de fotos, notificaciones por email, bandeja de moderación con aprobación granular, y tests E2E del ciclo completo.
+
+Decisiones de Arquitectura de la Épica
+Server Actions para el formulario: El formulario de contribución usa Next.js Server Actions con FormData nativo. Permite subir archivos directamente al servidor con validación Zod antes de tocar PocketBase.
+Bandeja de moderación en Next.js: El panel admin vive en /admin/* dentro del mismo proyecto Next.js, protegido por middleware de autenticación. No es una aplicación separada.
+Email via PocketBase hooks nativos: PocketBase tiene sistema de email transaccional con templates. Se configura hook afterCreate en proposals y afterUpdate para notificaciones. Sin dependencia de SendGrid.
+Aprobación selectiva de campos: El administrador puede aprobar la biografía, rechazar las fotos y pedir revisión del documento. Evita publicar contenido parcialmente revisado.
+
+
+US-501  Página pública de contribución ciudadana
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /contribuir/test-citizen → HTTP 200, formulario visible en Pixel 7
+✓  El nombre del ciudadano objetivo aparece en el H1 de la página
+✓  El campo "Tu nombre" es required con mensaje de error en español
+✓  El área de texto "Información biográfica" acepta ≥ 2000 caracteres
+✓  Subir 3 fotos muestra 3 previews antes de enviar
+✓  Cada preview tiene botón X para eliminar esa foto individual
+✓  Submit válido → pantalla de confirmación sin recargar página
+✓  Submit crea registro en proposals con status=pending
+✓  GET /contribuir/slug-inexistente → redirige a /directorio
+✓  El formulario funciona con JS deshabilitado (Server Action)
+
+Tareas Técnicas
+
+US-502  Notificaciones por email vía PocketBase hooks
+
+Criterios de Aceptación (Playwright E2E)
+✓  Tras crear proposal → hook afterCreate de PocketBase envía email de confirmación
+✓  Email de confirmación llega a contributor_email con asunto que incluye nombre del ciudadano
+✓  Tras PATCH status=approved → hook afterUpdate envía email de aprobación con link al perfil
+✓  Tras PATCH status=rejected → email de rechazo incluye reviewer_note
+✓  Ningún email expone datos internos del sistema
+✓  Los emails funcionan con Mailtrap en staging (verificado en CI)
+
+Tareas Técnicas
+
+US-503  Middleware de autenticación del panel de administración
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /admin → redirige a /admin/login sin sesión (302)
+✓  GET /admin/propuestas → redirige a /admin/login sin sesión
+✓  Login con credenciales inválidas → mensaje "Credenciales incorrectas" en rojo
+✓  Login con credenciales válidas → redirige a /admin/propuestas
+✓  Cookie de sesión tiene atributos HttpOnly y SameSite=Strict
+✓  Botón "Cerrar sesión" elimina la cookie y redirige a /admin/login
+
+Tareas Técnicas
+
+US-504  Bandeja de moderación: listado de propuestas
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /admin/propuestas → listado visible con sesión válida
+✓  Propuestas pending aparecen primero, ordenadas por created desc
+✓  Cada fila muestra: nombre contribuyente, ciudadano, fecha, estado con badge
+✓  Contador "X pendientes" en sidebar se actualiza con datos reales
+✓  Filtros: Pendientes | Aprobadas | Rechazadas | Todas
+✓  Con 0 propuestas pendientes: mensaje "Todo al día"
+✓  Badge Pendiente = amarillo, Aprobada = verde, Rechazada = rojo — Light Mode
+
+Tareas Técnicas
+
+US-505  Vista de detalle con aprobación granular
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /admin/propuestas/{id} → datos completos del contribuyente y contenido propuesto
+✓  El texto biográfico propuesto se muestra con diff visual respecto al texto actual
+✓  Las fotos propuestas se muestran en tamaño grande (≥ 200px de ancho)
+✓  Cada foto tiene checkbox individual "Incluir esta foto"
+✓  El textarea de biografía es editable por el admin antes de aprobar
+✓  Botón "Aprobar selección" → actualiza el citizen con el contenido seleccionado
+✓  Botón "Rechazar" abre modal con textarea para reviewer_note (requerido, mín 10 chars)
+✓  Tras aprobar → revalidatePath invalida la caché de la página memorial
+✓  Hay diálogo de confirmación antes de aprobar (irreversible)
+
+Tareas Técnicas
+
+US-506  Vista de edición de perfil de ciudadano
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /admin/ciudadanos → listado con botón "Editar" en cada fila
+✓  GET /admin/ciudadanos/{id}/editar → formulario con campos pre-rellenados
+✓  Modificar el campo "Biografía" y guardar → citizen se actualiza en PocketBase
+✓  Toggle "Publicado" cambia el campo published del citizen
+✓  Toggle "Ciudadano Patrimonial" cambia is_patrimonial y exemption_active
+✓  Guardar redirige con mensaje de éxito y revalidatePath invalida la caché
+
+Tareas Técnicas
+
+US-507  Tests E2E del flujo completo de crowdsourcing
+
+Criterios de Aceptación (Playwright E2E)
+✓  El test completo corre en < 60 segundos en el pipeline de CI
+✓  Paso 1: contribuyente envía formulario desde Pixel 7 → pantalla de éxito visible
+✓  Paso 2: propuesta aparece en /admin/propuestas con status=pending
+✓  Paso 3: admin aprueba la propuesta con texto editado
+✓  Paso 4: /memorial/test-citizen muestra el nuevo texto biográfico (sin caché stale)
+✓  Paso 5: Mailtrap recibió los 2 emails (confirmación + aprobación)
+✓  El test limpia los datos creados tras cada ejecución (cleanup en afterEach)
+
+Tareas Técnicas
+
+US-508  Dashboard de métricas de moderación
+
+Criterios de Aceptación (Playwright E2E)
+✓  GET /admin → dashboard con 4 métricas visibles sin scroll en desktop 1024px
+✓  Métricas: propuestas pendientes, aprobadas este mes, tasa de aprobación, total visitas QR
+✓  Cada métrica tiene label en español y contraste WCAG AA
+✓  La tasa de aprobación se muestra como porcentaje con 1 decimal (ej. 87.5%)
+
+Tareas Técnicas
+
+US-509  Rate limiting y protección anti-spam
+
+Criterios de Aceptación (Playwright E2E)
+✓  Enviar 5 propuestas desde la misma IP en 10 minutos → la 6ª recibe error
+✓  El mensaje de error indica cuántos minutos debe esperar el usuario
+✓  Una IP diferente puede enviar sin restricción
+✓  El error se muestra en el formulario (no página de error en blanco)
+✓  El rate limit NO afecta a las rutas del panel de admin
+
+Tareas Técnicas
+
+
+Resumen Ejecutivo del Product Backlog
+
+Estimación basada en velocidad de equipo de 20–25 puntos por sprint de 2 semanas con equipo de 2 developers + 1 QA Engineer. La Definición de Terminado (DoD) global requiere: código revisado en PR, tests Playwright E2E pasando, sin errores de consola, Lighthouse Performance ≥ 85 en móvil, y accesibilidad WCAG AA verificada.
