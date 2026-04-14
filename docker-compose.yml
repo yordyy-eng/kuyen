@@ -24,7 +24,7 @@ services:
     container_name: kuyen-frontend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3005:3000"
     environment:
       - POCKETBASE_URL=http://pocketbase:8090
     depends_on:
