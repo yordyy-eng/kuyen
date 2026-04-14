@@ -154,11 +154,10 @@ export default function EditCitizenForm({ citizen, qrRecord }: Props) {
       <div className="fixed bottom-0 inset-x-0 bg-white/80 backdrop-blur-md border-t border-border p-4 flex justify-end gap-4 z-20">
         {qrRecord && (
           <a
-            href={`/api/qr-plate/${qrRecord.code}`}
-            download
-            className="px-6 py-3 bg-white border-2 border-primary text-primary font-sans font-bold rounded-xl hover:bg-stone-50 transition-all flex items-center gap-2"
+            href={`/admin/ciudadanos/${citizen.id}/imprimir`}
+            className="px-6 py-3 bg-stone-100 border-2 border-primary text-primary font-sans font-bold rounded-xl hover:bg-stone-200 transition-all flex items-center gap-2"
           >
-            <span>📱</span> Generar Placa QR
+            <span>🖨️</span> Imprimir Placa Patrimonio
           </a>
         )}
         <SubmitButton />

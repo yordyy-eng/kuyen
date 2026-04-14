@@ -5,6 +5,7 @@ import { getCitizenBySlug, getRelationshipsByCitizenId } from '@/lib/pb-server';
 import FamilyTree from '@/components/memorial/FamilyTree';
 import TreeContributePrompt from '@/components/tree/TreeContributePrompt';
 import { getPBImageUrl } from '@/lib/pb-client-utils';
+import { SITE_CONFIG } from '@/constants/site-config';
 
 /**
  * US-506: SEO Dinámico mediante Metadatos de Servidor.
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   if (!citizen) {
     return {
-      title: 'Ciudadano no encontrado | Kuyen',
+      title: SITE_CONFIG.memorial.notFound,
     };
   }
 
@@ -49,7 +50,7 @@ export default async function MemorialPage({ params }: { params: { slug: string 
           href="/" 
           className="text-gold font-sans text-sm font-medium flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <span className="text-xl">←</span> Volver al directorio
+          <span className="text-xl">←</span> {SITE_CONFIG.memorial.backToDirectory}
         </Link>
       </nav>
 
@@ -57,7 +58,7 @@ export default async function MemorialPage({ params }: { params: { slug: string 
       <header className="max-w-3xl mx-auto px-4 mb-12 text-center md:text-left">
         <div className="inline-block py-1 px-3 bg-surface border-l-2 border-gold mb-6">
           <span className="text-[10px] uppercase tracking-[0.3em] font-sans font-medium text-secondary">
-            In memoriam
+            {SITE_CONFIG.memorial.inMemoriam}
           </span>
         </div>
         
@@ -67,13 +68,13 @@ export default async function MemorialPage({ params }: { params: { slug: string 
 
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8 border-y border-border/40 py-6 mt-8">
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-widest text-secondary font-sans">Periodo</span>
+            <span className="text-[10px] uppercase tracking-widest text-secondary font-sans">{SITE_CONFIG.memorial.period}</span>
             <span className="text-lg font-serif italic text-gold">
               {citizen.birth_year || '—'} — {citizen.death_year || 'Presente'}
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-widest text-secondary font-sans">Categoría</span>
+            <span className="text-[10px] uppercase tracking-widest text-secondary font-sans">{SITE_CONFIG.memorial.category}</span>
             <span className="text-lg font-serif italic text-gold">
               {citizen.patrimonial_category}
             </span>
@@ -102,7 +103,7 @@ export default async function MemorialPage({ params }: { params: { slug: string 
         <div className="mt-16 text-center border-t border-border pt-12">
           <div className="text-3xl text-gold font-serif opacity-40 mb-4">“</div>
           <p className="font-serif italic text-secondary text-lg max-w-md mx-auto">
-            La memoria es el único paraíso del que no podemos ser expulsados.
+            {SITE_CONFIG.memorial.quote}
           </p>
         </div>
       </section>

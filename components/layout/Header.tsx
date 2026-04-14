@@ -1,11 +1,12 @@
 import React from 'react';
+import { SITE_CONFIG } from '@/constants/site-config';
 
 const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border">
       <nav className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="text-2xl font-serif tracking-tight cursor-pointer">
-          KU<span className="text-gold font-semibold text-3xl">YEN</span>
+          {SITE_CONFIG.name.slice(0, 2)}<span className="text-gold font-semibold text-3xl">{SITE_CONFIG.name.slice(2)}</span>
         </div>
         
         {/* Mobile Menu Button - 44px minimum touch target */}

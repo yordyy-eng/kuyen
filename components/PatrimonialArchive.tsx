@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import CitizenCard from './CitizenCard';
+import { SITE_CONFIG } from '@/constants/site-config';
 
 interface CitizenRecord {
   id: string;
@@ -30,54 +31,33 @@ export default function PatrimonialArchive({ initialCitizens }: PatrimonialArchi
   }, [searchTerm, initialCitizens]);
 
   return (
-    <>
-      {/* 1. Hero Search Section (Parte Dinámica) */}
-      <section className="pt-24 pb-16 px-4">
-        <div className="max-w-4xl mx-auto backdrop-blur-sm bg-white/40 border border-amber-900/10 shadow-md rounded-2xl p-8 md:p-12 text-center">
-          <div className="mb-6 inline-block py-1 px-4 bg-amber-900/5 rounded-full">
-            <span className="text-[10px] uppercase tracking-[0.3em] font-sans font-medium text-amber-900/70">
-              Archivo Vivo del Patrimonio
-            </span>
-          </div>
-          
-          <h1 className="text-5xl md:text-7xl font-serif text-primary leading-tight mb-8">
-            Kuyen <span className="text-gold italic">Heritage</span>
-          </h1>
-
-          {/* Búsqueda Minimalista Reactiva */}
-          <div className="max-w-lg mx-auto relative group">
-            <input 
-              type="text" 
-              placeholder="Buscar por nombre o apellido..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white/60 border border-amber-900/20 rounded-lg px-5 py-4 font-sans text-sm focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/30 transition-all placeholder:text-secondary/50 placeholder:italic"
-            />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary/40 group-focus-within:text-gold/60 transition-colors pointer-events-none">
-              🔎
-            </span>
-          </div>
-
-          <div className="mt-8 text-secondary/70 font-sans text-xs uppercase tracking-widest">
-            {searchTerm ? (
-              <span>Encontrados: {filteredCitizens.length} registros</span>
-            ) : (
-              <span>Explora la memoria colectiva de Angol</span>
-            )}
-          </div>
+    <div className="space-y-16">
+      {/* 1. Barrita de Búsqueda Minimalista */}
+      <div className="max-w-2xl mx-auto relative group">
+        <input 
+          type="text" 
+          placeholder={SITE_CONFIG.hero.searchPlaceholder}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full bg-white/60 backdrop-blur-sm border border-gold/20 rounded-xl px-6 py-5 font-sans text-lg focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold/30 transition-all shadow-sm placeholder:text-secondary/40"
+        />
+        <span className="absolute right-6 top-1/2 -translate-y-1/2 text-2xl group-focus-within:scale-110 transition-transform pointer-events-none grayscale opacity-30 group-focus-within:opacity-100 group-focus-within:grayscale-0">
+          🔍
+        </span>
+        
+        <div className="absolute -bottom-8 left-0 w-full text-center">
+          <p className="text-[10px] uppercase tracking-widest text-secondary/50 font-medium">
+            {searchTerm 
+              ? SITE_CONFIG.hero.resultsText.replace('{count}', filteredCitizens.length.toString())
+              : SITE_CONFIG.hero.exploreText}
+          </p>
         </div>
-      </section>
+      </div>
 
-      {/* 2. Citizens List Result (Parte Dinámica) */}
-      <section className="container mx-auto px-4 py-24 min-h-[400px]">
-        <div className="mb-12">
-          <h2 className="text-3xl font-serif text-primary border-b border-gold/20 pb-4 inline-block">
-            Registros <span className="italic text-gold">Patrimoniales</span>
-          </h2>
-        </div>
-
+      {/* 2. Listado de Registros */}
+      <div className="pt-8">
         {filteredCitizens.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 transition-all duration-500">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-500">
             {filteredCitizens.map((citizen) => (
               <CitizenCard 
                 key={citizen.id}
@@ -91,22 +71,22 @@ export default function PatrimonialArchive({ initialCitizens }: PatrimonialArchi
             ))}
           </div>
         ) : (
-          <div className="bg-white/40 backdrop-blur-sm p-12 text-center border border-amber-900/10 rounded-xl max-w-2xl mx-auto shadow-sm animate-in fade-in zoom-in duration-300">
-            <p className="text-secondary font-serif italic text-xl mb-2">
-              Ningún registro coincide con "{searchTerm}" en nuestros archivos históricos.
+          <div className="bg-white/40 backdrop-blur-sm p-16 text-center border border-gold/10 rounded-2xl max-w-2xl mx-auto shadow-sm animate-in fade-in zoom-in duration-300">
+            <p className="text-secondary font-serif italic text-2xl mb-4">
+              {SITE_CONFIG.hero.noResultsTitle.replace('{term}', searchTerm)}
             </p>
-            <p className="text-[10px] text-secondary/60 uppercase tracking-widest font-sans mt-4">
-              Intenta con un nombre diferente o navega por los registros destacados
+            <p className="text-xs text-secondary/60 uppercase tracking-widest font-sans">
+              {SITE_CONFIG.hero.noResultsSubtitle}
             </p>
             <button 
               onClick={() => setSearchTerm('')}
-              className="mt-6 text-gold font-sans text-xs uppercase tracking-widest hover:underline"
+              className="mt-10 px-6 py-2 border border-gold/30 text-gold font-sans text-xs uppercase tracking-widest hover:bg-gold hover:text-white transition-all rounded-full"
             >
-              Ver todos los registros
+              {SITE_CONFIG.hero.viewAllCta}
             </button>
           </div>
         )}
-      </section>
-    </>
+      </div>
+    </div>
   );
 }

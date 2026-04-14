@@ -121,6 +121,18 @@ export async function getCitizenBySlug(slug: string): Promise<CitizenRecord> {
 }
 
 /**
+ * Obtiene un ciudadano específico por su ID.
+ */
+export async function getCitizenById(id: string): Promise<CitizenRecord | null> {
+  try {
+    const pb = await createAuthenticatedPB();
+    return await pb.collection('citizens').getOne<CitizenRecord>(id);
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
  * Obtiene todas las relaciones de un ciudadano específico.
  */
 export async function getRelationshipsByCitizenId(citizenId: string): Promise<RelationshipRecord[]> {

@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Jost } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { SITE_CONFIG } from "@/constants/site-config";
 
 const serif = Cormorant_Garamond({ 
   subsets: ["latin"],
@@ -17,8 +18,8 @@ const sans = Jost({
 });
 
 export const metadata: Metadata = {
-  title: "KUYEN — Gestión Patrimonial",
-  description: "Registro oficial del patrimonio del Cementerio Municipal de Angol.",
+  title: SITE_CONFIG.metadata.title,
+  description: SITE_CONFIG.metadata.description,
 };
 
 export default function RootLayout({
