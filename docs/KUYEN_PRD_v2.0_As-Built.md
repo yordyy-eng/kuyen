@@ -1,20 +1,18 @@
-# KUYEN PRD v2.0 — As-Built
+# KUYEN PRD v2.1 — As-Built
 ## Documento de Identidad Técnica e Infraestructura Cloud
 
-**Estado:** Producción (Finalizado)  
+**Estado:** Producción (Estandarizado)  
 **Arquitecto:** Lead Cloud Architect & AI Assistant  
-**Fecha:** 13 de abril de 2026  
+**Fecha:** 14 de abril de 2026  
 
 ---
 
 ## 1. Introducción
-Este documento detalla el estado final de construcción ("As-Built") de la plataforma KUYEN. A diferencia del borrador inicial (v1.0), el sistema ha evolucionado hacia una arquitectura robusta basada en contenedores bajo demanda, orquestada por **Nginx Proxy Manager (NPM)** y optimizada para el "Free Tier" de Oracle Cloud Infrastructure (OCI).
+Este documento detalla el estado final de construcción ("As-Built") de la plataforma KUYEN. El sistema ha evolucionado hacia una arquitectura GitOps-driven, orquestada por **Nginx Proxy Manager (NPM)** y centralizada para escalabilidad institucional.
 
 ---
 
-## 2. Arquitectura Cloud & DevOps (Zero-Trust)
-
-La infraestructura ha sido consolidada bajo el dominio maestro `adelchen.cl`. Abandonamos el uso de Nginx nativo para implementar un sistema de administración centralizado mediante NPM en Docker.
+## 2. Arquitectura Cloud & DevOps (GitOps)
 
 ### 📊 Diagrama de Topología
 ```mermaid
@@ -24,35 +22,23 @@ graph TD
         Admin((Administrador))
     end
 
-    subgraph "Oracle Cloud VCN (Seguridad Estricta)"
+    subgraph "Oracle Cloud VCN"
         subgraph "Docker Engine"
             NPM[Nginx Proxy Manager Container]
             NextJS[KUYEN Next.js Container :3005]
             PB[PocketBase Backend Container :8095]
         end
-
-        subgraph "Servicios Externos"
-            LE[Let's Encrypt SSL]
-        end
-
-        SSH_T[Túnel SSH LocalPort:8181]
+        
+        Config[constants/site-config.ts] -.-> NextJS
     end
 
-    %% Flujo de Tráfico Público
     User -- HTTPS:443 --> NPM
     NPM -- Proxy Pass:3005 --> NextJS
     NextJS -- Internal API --> PB
-
-    %% Flujo Administrativo Seguro
-    Admin -- SSH Tunnel --> SSH_T
-    SSH_T -- Local Access --> NPM
-
-    %% Certificación
-    NPM <--> LE
 ```
 
-### El Puente de Red (Bridge IP: 172.17.0.1)
-Para permitir que NPM (aislado en su propio contenedor) se comunique con los servicios del host o de otros Dockers, se ha configurado la dirección **172.17.0.1** como el gateway bridge. Esta IP actúa como el "puente vital", permitiendo que el tráfico entrante de `kuyen.adelchen.cl` encuentre su destino interno en el puerto 3005 sin exponer puertos innecesarios al firewall público.
+### Estandarización de Interfaz (GitOps)
+La UI ya no contiene textos estáticos "hardcoded". Toda la configuración institucional reside en `constants/site-config.ts`. Cualquier cambio en el eslogan, contacto o descripción se realiza mediante un push a rama `main`, desencadenando un despliegue atómico.
 
 ---
 

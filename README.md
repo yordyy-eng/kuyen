@@ -1,5 +1,8 @@
 # KUYEN - Plataforma de Registro Patrimonial
 
+> [!IMPORTANT]
+> 🚀 **¿Eres un nuevo agente?** Lee obligatoriamente [docs/BOOTSTRAP.md](file:///d:/Adelchen/kuyen/docs/BOOTSTRAP.md) antes de tocar una sola línea de código. Ignorar esto resultará en la deshonra de la tribu y builds fallidos.
+
 KUYEN es una plataforma diseñada para digitalizar la memoria y el patrimonio, creando un puente entre monumentos físicos y registros digitales dinámicos.
 
 ## Visión General

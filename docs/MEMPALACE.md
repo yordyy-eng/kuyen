@@ -18,6 +18,21 @@
 
 ---
 
+## ⚙️ GitOps & Estandarización
+- **SITE_CONFIG**: Fuente única de verdad para UI (`constants/site-config.ts`).
+- **Workflow**: Cambios en UI se realizan vía código, no hardcoded en componentes.
+- **Admin Guidance**: Consultar `docs/GUIA_HISTORIADOR.md` para gestión de PocketBase.
+
+---
+
+## 🖨️ Módulo de Impresión QR (Phygital)
+- **Ruta**: `/admin/ciudadanos/[id]/imprimir`.
+- **Logic**: Generación de placas QR institucionales (9x9cm) con Escudo de Angol.
+- **Library**: `qrcode.react`.
+- **CSS**: Media query `@media print` optimizado para ocultar UI administrativa.
+
+---
+
 ## 🛡️ Seguridad & SecOps
 - **Rate Limiting**: US-509 activo (En memoria).
 - **IP Extraction**: Header `x-forwarded-for` obligatorio para identificar clientes reales tras el proxy.
@@ -36,7 +51,8 @@
 - **Caveman**: Tersedad máxima (Skills).
 - **AutoSkills**: Gestión automatizada de capacidades.
 - **Frontend-Design**: Prohibido placeholders, calidad premium.
+- **Protocolo**: Consultar `docs/BOOTSTRAP.md` antes de iniciar sesión.
 
 ---
 
-**Última Sincronización**: 13 de abril de 2026.
+**Última Sincronización**: 14 de abril de 2026.
