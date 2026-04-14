@@ -21,7 +21,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: kuyen-frontend
+    container_name: kuyen-frontend-prod
     restart: unless-stopped
     ports:
       - "3005:3000"
