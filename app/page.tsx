@@ -7,6 +7,8 @@ import { listCitizens } from '@/lib/pb-server';
  * Directorio Público de Ciudadanos — Modern Heritage Edition
  * Refactorización hacia una estética de museo minimalista.
  */
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const citizens = await listCitizens();
 
