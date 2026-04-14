@@ -1,21 +1,15 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { updateCitizen } from '@/app/actions/citizens';
+import { createCitizen } from '@/app/actions/citizens';
 import { useFormState, useFormStatus } from 'react-dom';
 import SEOFields from './SEOFields';
 
-interface Props {
-  citizen: any; // CitizenRecord expandido
-  qrRecord?: any; // QrRecord
-}
-
-export default function EditCitizenForm({ citizen, qrRecord }: Props) {
-  const [state, action] = useFormState(updateCitizen, null);
-  const [preview, setPreview] = useState<string | null>(
-    citizen.portrait ? `http://localhost:8091/api/files/citizens/${citizen.id}/${citizen.portrait}?thumb=200x200` : null
-  );
+export default function CreateCitizenForm() {
+  const [state, action] = useFormState(createCitizen, null);
+  const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fullName, setFullName] = useState('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -28,9 +22,7 @@ export default function EditCitizenForm({ citizen, qrRecord }: Props) {
 
   return (
     <form action={action} className="space-y-8 pb-20">
-      <input type="hidden" name="id" value={citizen.id} />
-
-      {/* 1. Header de Edición */}
+      {/* 1. Header de Creación */}
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-6">
           <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
@@ -41,7 +33,7 @@ export default function EditCitizenForm({ citizen, qrRecord }: Props) {
                 <span className="text-3xl opacity-20">👤</span>
               )}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-                <span className="text-white text-[10px] uppercase font-bold tracking-widest">Cambiar Foto</span>
+                <span className="text-white text-[10px] uppercase font-bold tracking-widest">Subir Foto</span>
               </div>
             </div>
             <input 
@@ -60,7 +52,8 @@ export default function EditCitizenForm({ citizen, qrRecord }: Props) {
             <input 
               type="text" 
               name="full_name"
-              defaultValue={citizen.full_name}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               required
               className="w-full bg-white border-2 border-border/60 rounded-2xl px-6 py-3 text-xl font-serif text-primary focus:border-gold focus:ring-0 transition-all"
               placeholder="Ej: Cornelio Saavedra"
@@ -74,21 +67,21 @@ export default function EditCitizenForm({ citizen, qrRecord }: Props) {
             id="published" 
             label="Visibilidad Pública" 
             description="El perfil será visible en el directorio." 
-            defaultChecked={citizen.published}
+            defaultChecked={false}
             color="bg-green-500"
           />
           <ToggleCard 
             id="is_patrimonial" 
             label="Estatus Patrimonial" 
             description="Clasificado como bien de interés nacional." 
-            defaultChecked={citizen.is_patrimonial}
+            defaultChecked={true}
             color="bg-amber-500"
           />
           <ToggleCard 
             id="exemption_active" 
             label="Exención Activa" 
             description="Beneficiario de protección tributaria." 
-            defaultChecked={citizen.exemption_active}
+            defaultChecked={false}
             color="bg-blue-500"
           />
         </div>
@@ -103,7 +96,7 @@ export default function EditCitizenForm({ citizen, qrRecord }: Props) {
             </label>
             <select 
               name="patrimonial_category" 
-              defaultValue={citizen.patrimonial_category}
+              defaultValue="Social"
               className="w-full bg-white border border-border rounded-xl px-4 py-3 text-sm font-sans focus:border-gold transition-all"
             >
               <option value="Militar">Militar</option>
@@ -120,11 +113,11 @@ export default function EditCitizenForm({ citizen, qrRecord }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-2 block font-sans">Año Nacimiento</label>
-              <input type="number" name="birth_year" defaultValue={citizen.birth_year} className="w-full bg-white border border-border rounded-xl px-4 py-3 text-sm" />
+              <input type="number" name="birth_year" className="w-full bg-white border border-border rounded-xl px-4 py-3 text-sm" />
             </div>
             <div>
               <label className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-2 block font-sans">Año Fallecimiento</label>
-              <input type="number" name="death_year" defaultValue={citizen.death_year} className="w-full bg-white border border-border rounded-xl px-4 py-3 text-sm" />
+              <input type="number" name="death_year" className="w-full bg-white border border-border rounded-xl px-4 py-3 text-sm" />
             </div>
           </div>
         </div>
@@ -135,7 +128,6 @@ export default function EditCitizenForm({ citizen, qrRecord }: Props) {
           </label>
           <textarea 
             name="short_bio" 
-            defaultValue={citizen.short_bio}
             maxLength={280}
             className="w-full bg-white border border-border rounded-xl px-4 py-3 text-sm font-sans min-h-[140px] resize-none focus:border-gold transition-all"
             placeholder="Escribe un breve resumen de máximo 280 caracteres..."
@@ -145,22 +137,11 @@ export default function EditCitizenForm({ citizen, qrRecord }: Props) {
 
       {/* Control SEO */}
       <SEOFields 
-        initialFullName={citizen.full_name}
-        initialSlug={citizen.slug}
-        initialMetaDescription={citizen.meta_description}
+        initialFullName={fullName}
       />
 
       {/* 4. Botones de Acción */}
       <div className="fixed bottom-0 inset-x-0 bg-white/80 backdrop-blur-md border-t border-border p-4 flex justify-end gap-4 z-20">
-        {qrRecord && (
-          <a
-            href={`/api/qr-plate/${qrRecord.code}`}
-            download
-            className="px-6 py-3 bg-white border-2 border-primary text-primary font-sans font-bold rounded-xl hover:bg-stone-50 transition-all flex items-center gap-2"
-          >
-            <span>📱</span> Generar Placa QR
-          </a>
-        )}
         <SubmitButton />
       </div>
 
@@ -213,7 +194,7 @@ function SubmitButton() {
         ${pending ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}
       `}
     >
-      {pending ? 'Grabando Cambios...' : 'Guardar Perfil'}
+      {pending ? 'Creando...' : 'Crear Ciudadano'}
     </button>
   );
 }

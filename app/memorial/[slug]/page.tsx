@@ -1,8 +1,33 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getCitizenBySlug, getRelationshipsByCitizenId } from '@/lib/pb-server';
 import FamilyTree from '@/components/memorial/FamilyTree';
 import TreeContributePrompt from '@/components/tree/TreeContributePrompt';
+import { getPBImageUrl } from '@/lib/pb-client-utils';
+
+/**
+ * US-506: SEO Dinámico mediante Metadatos de Servidor.
+ */
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const citizen = await getCitizenBySlug(params.slug);
+
+  if (!citizen) {
+    return {
+      title: 'Ciudadano no encontrado | Kuyen',
+    };
+  }
+
+  return {
+    title: `${citizen.full_name} | Memorial Patrimonial Kuyen`,
+    description: citizen.meta_description || citizen.short_bio || `Homenaje patrimonial a ${citizen.full_name} en Angol.`,
+    openGraph: {
+      title: citizen.full_name,
+      description: citizen.meta_description || citizen.short_bio,
+      images: citizen.portrait ? [getPBImageUrl(citizen) || ''] : [],
+    },
+  };
+}
 
 /**
  * Vista de Detalle: Memorial del Ciudadano

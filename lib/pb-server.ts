@@ -38,6 +38,7 @@ export interface CitizenRecord {
   plot_number?: string;
   visit_count?: number;
   published: boolean;
+  meta_description?: string;
 }
 
 export interface RelationshipRecord {

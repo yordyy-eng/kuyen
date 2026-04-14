@@ -10,15 +10,19 @@ import { ADMIN_COOKIE_NAME } from '@/lib/auth-constants';
 const citizenUpdateSchema = z.object({
   id: z.string().min(1),
   full_name: z.string().min(2, 'El nombre es obligatorio.').max(100),
+  slug: z.string().min(3, 'El slug debe tener al menos 3 caracteres.'),
   patrimonial_category: z.string().min(1),
   short_bio: z.string().max(280).optional(),
   biography: z.string().optional(),
+  meta_description: z.string().max(200).optional(),
   birth_year: z.coerce.number().min(1500).max(2100).nullable().optional(),
   death_year: z.coerce.number().min(1500).max(2100).nullable().optional(),
   published: z.boolean().default(false),
   is_patrimonial: z.boolean().default(false),
   exemption_active: z.boolean().default(false),
 });
+
+const citizenCreateSchema = citizenUpdateSchema.omit({ id: true });
 
 /**
  * US-506: Actualizar perfil de ciudadano desde el panel admin.
@@ -37,9 +41,11 @@ export async function updateCitizen(prevState: any, formData: FormData) {
   const rawData = {
     id: formData.get('id'),
     full_name: formData.get('full_name'),
+    slug: formData.get('slug'),
     patrimonial_category: formData.get('patrimonial_category'),
     short_bio: formData.get('short_bio'),
     biography: formData.get('biography'),
+    meta_description: formData.get('meta_description'),
     birth_year: formData.get('birth_year') || null,
     death_year: formData.get('death_year') || null,
     published: formData.get('published') === 'on',
@@ -91,5 +97,65 @@ export async function updateCitizen(prevState: any, formData: FormData) {
   }
 
   // Redirigir al listado tras éxito
+  redirect('/admin/ciudadanos');
+}
+
+/**
+ * US-506: Crear nuevo ciudadano desde el panel admin.
+ */
+export async function createCitizen(prevState: any, formData: FormData) {
+  const cookieStore = await cookies();
+  if (!cookieStore.get(ADMIN_COOKIE_NAME)) {
+    return { success: false, error: 'No autorizado.' };
+  }
+
+  const pb = await createAuthenticatedPB();
+
+  const rawData = {
+    full_name: formData.get('full_name'),
+    slug: formData.get('slug'),
+    patrimonial_category: formData.get('patrimonial_category'),
+    short_bio: formData.get('short_bio'),
+    biography: formData.get('biography'),
+    meta_description: formData.get('meta_description'),
+    birth_year: formData.get('birth_year') || null,
+    death_year: formData.get('death_year') || null,
+    published: formData.get('published') === 'on',
+    is_patrimonial: formData.get('is_patrimonial') === 'on',
+    exemption_active: formData.get('exemption_active') === 'on',
+  };
+
+  const validated = citizenCreateSchema.safeParse(rawData);
+  if (!validated.success) {
+    return { success: false, error: validated.error.issues[0]?.message };
+  }
+
+  try {
+    const createData = new FormData();
+    Object.entries(validated.data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        createData.set(key, value.toString());
+      }
+    });
+
+    createData.set('published', validated.data.published ? 'true' : 'false');
+    createData.set('is_patrimonial', validated.data.is_patrimonial ? 'true' : 'false');
+    createData.set('exemption_active', validated.data.exemption_active ? 'true' : 'false');
+
+    const portrait = formData.get('portrait');
+    if (portrait instanceof File && portrait.size > 0) {
+      createData.set('portrait', portrait);
+    }
+
+    await pb.collection('citizens').create(createData);
+
+    revalidatePath('/directorio');
+    revalidatePath('/admin/ciudadanos');
+
+  } catch (error: any) {
+    console.error('[Security Audit] Create Citizen failed');
+    return { success: false, error: 'Error al crear el ciudadano.' };
+  }
+
   redirect('/admin/ciudadanos');
 }
